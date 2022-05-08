@@ -2,12 +2,12 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
-#include "permutation.hpp"
+//#include "permutation.hpp"
 
 int main()
 {
 
-	std::ifstream dic("./testcase/dic2.txt");
+	std::ifstream dic("./words.txt");
 	int buf_size = 81;
 	char str[buf_size];
 	int line_num = 0;
@@ -19,17 +19,13 @@ int main()
 	}
 	while (dic.getline(str, buf_size)){
 		word = str;
-		std::cout << word << std::endl;
-		auto permutation = Permutation{word};
+		std::sort(word.begin(), word.end());
+		dictionary.push_back(word);
+
+		/* auto permutation = Permutation{word};
 		do{
 			dictionary.push_back(permutation.getList());
-		}while(permutation.permutate());
-
-/*		std::sort(word.begin(), word.end(), std::greater<>());
-		do{	
-			dictionary.push_back(word);
-		}while(std::next_permutation(word.begin(), word.end()));
-		++ line_num;*/
+		}while(permutation.permutate());*/
 
 	}
 
@@ -46,6 +42,7 @@ int main()
 	}
 	while (words.getline(str, buf_size)){
 		word = str;
+		std::sort(word.begin(), word.end());
 		//if (std::find(dictionary.begin(), dictionary.end(), word) != dictionary.end()){
 		if(*(std::lower_bound(dictionary.begin(), dictionary.end(), word)) == word ){
 			std::cout << word << std::endl;
