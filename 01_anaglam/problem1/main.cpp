@@ -8,7 +8,7 @@ int main()
 
 	std::string file_name;
 	std::cin >> file_name;
-	std::ifstream dic("./words.txt");
+	std::ifstream dic("./testcase/words.txt");
 	int buf_size = 81;
 	char str[buf_size];
 	int line_num = 0;
