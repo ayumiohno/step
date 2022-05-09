@@ -2,50 +2,48 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
-//#include "permutation.hpp"
 
 int main()
 {
 
+	std::string file_name;
+	std::cin >> file_name;
 	std::ifstream dic("./words.txt");
 	int buf_size = 81;
 	char str[buf_size];
 	int line_num = 0;
-	std::vector<std::string> dictionary;
-	std::string word;
+	std::vector<std::pair<std::string, std::string>> dictionary;
 	if(dic.fail()){
 		std::cout << "failed to read file" << std::endl;
 		return -1;
 	}
 	while (dic.getline(str, buf_size)){
-		word = str;
-		std::sort(word.begin(), word.end());
-		dictionary.push_back(word);
-
-		/* auto permutation = Permutation{word};
-		do{
-			dictionary.push_back(permutation.getList());
-		}while(permutation.permutate());*/
-
+		std::string word_sort = str;
+		std::string word_original = str;
+		std::sort(word_sort.begin(), word_sort.end());
+		dictionary.push_back({word_original, word_sort});
 	}
 
-	/*for (auto word : dictionary){
-		std::cout << word << std::endl;
-	}*/
+	std::sort(dictionary.begin(), dictionary.end(), [](auto& a, auto& b){return a.second < b.second;});
 
-	std::sort(dictionary.begin(), dictionary.end());
-
-	std::ifstream words("./testcase/words2.txt");
+	std::ifstream words("./" + file_name);
 	if(words.fail()){
 		std::cout << "failed to read file" << std::endl;
 		return -1;
 	}
 	while (words.getline(str, buf_size)){
+		std::string word;
 		word = str;
 		std::sort(word.begin(), word.end());
-		//if (std::find(dictionary.begin(), dictionary.end(), word) != dictionary.end()){
-		if(*(std::lower_bound(dictionary.begin(), dictionary.end(), word)) == word ){
-			std::cout << word << std::endl;
+		auto word_of_dic = *std::lower_bound(
+				dictionary.begin(),
+				dictionary.end(), 
+				std::pair<std::string, std::string>{"hoge", word},
+				[](auto& a, auto& b){return a.second < b.second;});
+		if(word_of_dic.second == word){
+			std::cout << word_of_dic.first << std::endl;
+		} else {
+			std::cout << "Could not find anaglam" << std::endl;
 		}
 	}
 

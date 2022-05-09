@@ -7,6 +7,8 @@
 int main()
 {
 
+	std::string file_name;
+	std::cin >> file_name;
 	std::ifstream dic("./words.txt");
 	int buf_size = 81;
 	char str[buf_size];
@@ -33,7 +35,7 @@ int main()
 
 	std::sort(dictionary.begin(), dictionary.end());
 
-	std::ifstream words("./small.txt");
+	std::ifstream words("./" + file_name);
 	if(words.fail()){
 		std::cout << "failed to read file" << std::endl;
 		return -1;
@@ -41,8 +43,8 @@ int main()
 	while (words.getline(str, buf_size)){
 		word = str;
 		std::array<int, 26> letter_list;
-		int score = 0;
-		std::vector<std::pair<std::string, int>> scores;
+		int score_of_max = 0;
+		std::string string_of_max;
 		for(std::size_t i = 0; i < 26; ++i){
 			letter_list.at(i) = 0;
 		}
@@ -50,6 +52,7 @@ int main()
 			++ letter_list.at(int(letter - 'a'));
 		}
 		for(auto letter_list_of_dic : dictionary){
+			int score = 0;
 			for(std::size_t i = 0; i < 26; ++ i){
 				if(letter_list.at(i) >= letter_list_of_dic.second.at(i)){
 					score += letter_list_of_dic.second.at(i) * score_list.at(i);
@@ -58,12 +61,12 @@ int main()
 					break;
 				}
 			}
-			if(score != 0){
-				scores.push_back({letter_list_of_dic.first, score});
+			if(score > score_of_max){
+				score_of_max = score;
+				string_of_max = letter_list_of_dic.first;
 			}
 		}
-		auto max_score = (*std::max_element(scores.begin(), scores.end(), [](const auto& a, const auto& b){return a.second < b.second;}));
-		std::cout << max_score.first << std::endl;
+		std::cout << string_of_max << std::endl;
 	}
 
 	return 0;
