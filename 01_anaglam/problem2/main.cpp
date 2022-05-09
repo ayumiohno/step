@@ -32,8 +32,6 @@ int main()
 		dictionary.push_back({str, letter_list});
 	}
 
-	std::sort(dictionary.begin(), dictionary.end());
-
 	std::ifstream words("./" + file_name);
 	if(words.fail()){
 		std::cout << "failed to read file" << std::endl;
