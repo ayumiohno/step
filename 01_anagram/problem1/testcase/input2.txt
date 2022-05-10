@@ -1,0 +1,4 @@
+act
+lamp
+alpm
+file

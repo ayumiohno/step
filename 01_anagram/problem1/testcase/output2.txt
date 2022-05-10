@@ -1,0 +1,4 @@
+cat (act) 
+palm (lamp) 
+palm lamp 
+lief (file) life 

@@ -5,9 +5,6 @@
 
 int main()
 {
-
-	std::string file_name;
-	std::cin >> file_name;
 	std::ifstream dic("./testcase/words.txt");
 	int buf_size = 81;
 	char str[buf_size];
@@ -19,31 +16,45 @@ int main()
 	}
 	while (dic.getline(str, buf_size)){
 		std::string word_sort = str;
-		std::string word_original = str;
+		std::string word_origin = str;
 		std::sort(word_sort.begin(), word_sort.end());
-		dictionary.push_back({word_original, word_sort});
+		dictionary.push_back({word_origin, word_sort});
 	}
 
 	std::sort(dictionary.begin(), dictionary.end(), [](auto& a, auto& b){return a.second < b.second;});
 
+	std::string file_name;
+	std::cin >> file_name;
 	std::ifstream words("./" + file_name);
 	if(words.fail()){
 		std::cout << "failed to read file" << std::endl;
 		return -1;
 	}
 	while (words.getline(str, buf_size)){
-		std::string word;
-		word = str;
-		std::sort(word.begin(), word.end());
-		auto word_of_dic = *std::lower_bound(
+		std::string word_sort = str;
+		std::string word_origin = str;
+		std::sort(word_sort.begin(), word_sort.end());
+		auto itr_lower = std::lower_bound(
 				dictionary.begin(),
 				dictionary.end(), 
-				std::pair<std::string, std::string>{"hoge", word},
+				std::pair<std::string, std::string>{"hoge", word_sort},
 				[](auto& a, auto& b){return a.second < b.second;});
-		if(word_of_dic.second == word){
-			std::cout << word_of_dic.first << std::endl;
-		} else {
+		auto itr_upper = std::upper_bound(
+				dictionary.begin(),
+				dictionary.end(), 
+				std::pair<std::string, std::string>{"hoge", word_sort},
+				[](auto& a, auto& b){return a.second < b.second;});
+		if (itr_lower == itr_upper){
 			std::cout << "Could not find anaglam" << std::endl;
+		} else {
+			for(auto itr = itr_lower; itr < itr_upper; ++itr ){
+				if ((*itr).first != word_origin){
+					std::cout << (*itr).first << " ";
+				} else {
+					std::cout << "(" + (*itr).first + ")" << " ";
+				}
+			}
+			std::cout << std::endl;
 		}
 	}
 
