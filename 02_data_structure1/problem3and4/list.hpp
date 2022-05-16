@@ -1,5 +1,6 @@
 #pragma once
 #include "data.hpp"
+#include <memory>
 
 /******************************************************
 ほしい機能(改良版)
@@ -23,30 +24,30 @@ public:
     List(const Tag& tag)
         : tag(tag)
     {
-        this->first = nullptr;
-        this->last = nullptr;
+        //this->first = std::make_shared<Node>{nullptr};
+        //this->last = std::make_shared<Node>{nullptr};
     }
 
     ~List() {}
 
-    void setFirst(Node* node)
+    void setFirst(std::weak_ptr<Node> node)
     {
         this->first = node;
     }
 
-    void setLast(Node* node)
+    void setLast(std::weak_ptr<Node> node)
     {
         this->last = node;
     }
 
-    void addLast(Node* node);
+    void addLast(std::weak_ptr<Node> node);
 
     void deleteFirst();
 
-    Node* find(Data* object);
+    std::weak_ptr<Node> find(std::string url);
 
 protected:
-    Node* first;
-    Node* last;
+    std::weak_ptr<Node> first;
+    std::weak_ptr<Node> last;
     Tag tag;
 };

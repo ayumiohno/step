@@ -1,6 +1,8 @@
 #include "list.hpp"
 #include "node.hpp"
+#include <assert.h>
 #include <iostream>
+#include <memory>
 
 /******************************************************
 ほしい機能(改良版)
@@ -11,31 +13,40 @@
 *******************************************************/
 
 
-void List::addLast(Node* node)
+void List::addLast(std::weak_ptr<Node> node)
 {
     std::cout << "call add last" << std::endl;
-    node->setLeft(this->last, tag);
+    auto node_ptr = node.lock();
+    assert(node_ptr != nullptr);
+    node_ptr->setLeft(this->last, tag);
     std::cout << "set left" << std::endl;
-    this->last->setRight(node, tag);
+    node_ptr->setLeft(this->last, tag);
+    auto last_ptr = this->last.lock();
+    if (last_ptr != nullptr) {
+        last_ptr->setRight(node, tag);
+    }
+    if (this->first.lock() == nullptr) {
+        this->first = node;
+        std::cout << "new first" << std::endl;
+    }
     this->last = node;
 }
 
 void List::deleteFirst()
 {
-    //this->first = nullptr;  //TODO hidoi
-    if (this->first) {
-        this->first->deleteNode();
-    }
+    auto first_ptr = this->first.lock();  //TODO hidoi
+    assert(first_ptr != nullptr);
+    first_ptr->deleteNode();
 }
 
-Node* List::find(Data* object)
+std::weak_ptr<Node> List::find(std::string url)
 {
     std::cout << "call find" << std::endl;
-    this->first = nullptr;  //TODO hidoi
-    if (!this->first) {
-        //std::cout << "nullptr: " << this->first << " " << std::endl;
-        return nullptr;
+    auto first_ptr = this->first.lock();  //TODO hidoi
+    if (first_ptr == nullptr) {
+        std::cout << "nullptr " << std::endl;
+        return this->first;
     }
     std::cout << "go to loop" << std::endl;
-    this->first->findLoop(object, tag);
+    first_ptr->findLoop(url, tag);
 }

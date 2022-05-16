@@ -14,7 +14,7 @@ public:
         return content;
     }
 
-    auto& refUrl()
+    auto getUrl()
     {
         return url;
     }

@@ -1,20 +1,21 @@
 #pragma once
 #include "list.hpp"
 #include <iostream>
+#include <memory>
 
 //Element一つにつき1個
-struct Node {
+struct Node : public std::enable_shared_from_this<Node> {
 
     struct Unit {
-        Node* left;
-        Node* right;
-        List* list;
+        std::weak_ptr<Node> left;
+        std::weak_ptr<Node> right;
+        std::shared_ptr<List> list;
     } hash, order;
 
     ~Node() {}
 
-    Node(Data* element, List* hash_list, List* order_list)
-        : element(element)
+    Node(std::shared_ptr<Data> element, std::shared_ptr<List> hash_list, std::shared_ptr<List> order_list)
+        : element(std::move(element))
     {
         hash.list = hash_list;
         order.list = order_list;
@@ -29,57 +30,61 @@ struct Node {
         }
     }
 
-    Node* findLoop(Data* object, const Tag& tag)
+    std::weak_ptr<Node> findLoop(std::string url, const Tag& tag)
     {
-        if (!refUnit(tag).right) {
-            return nullptr;
+        if (this->element->getUrl() == url) {
+            return shared_from_this();
         } else {
-            if (this->element == object) {
-                return this;
+            auto right_ptr = refUnit(tag).right.lock();
+            if (right_ptr == nullptr) {
+                return refUnit(tag).right;
             } else {
-                refUnit(tag).left->findLoop(object, tag);
+                right_ptr->findLoop(url, tag);
             }
         }
     }
 
-    void setLeft(Node* node, const Tag& tag)
+    void setLeft(std::weak_ptr<Node> node, const Tag& tag)
     {
         std::cout << "called setLeft " << std::endl;
-        refUnit(tag).left = node ? node : nullptr;
+        refUnit(tag).left = node;
         std::cout << "done setLeft " << std::endl;
     }
 
-    void setRight(Node* node, const Tag& tag)
+    void setRight(std::weak_ptr<Node> node, const Tag& tag)
     {
-        refUnit(tag).right = node ? node : nullptr;
+        refUnit(tag).right = node;
     }
 
     void leaveList(const Tag& tag)
     {
-        refUnit(tag).left->setRight(refUnit(tag).right, tag);
-        if (!refUnit(tag).right) {
-            refUnit(tag).list->setLast(refUnit(tag).left);
-        }
-        refUnit(tag).right->setLeft(refUnit(tag).left, tag);
-        if (!refUnit(tag).left) {
+        auto left_ptr = refUnit(tag).left.lock();
+        if (left_ptr == nullptr) {
             refUnit(tag).list->setFirst(refUnit(tag).right);
+        } else {
+            left_ptr->setRight(refUnit(tag).right, tag);
+        }
+        auto right_ptr = refUnit(tag).right.lock();
+        if (right_ptr == nullptr) {
+            refUnit(tag).list->setLast(refUnit(tag).left);
+        } else {
+            right_ptr->setLeft(refUnit(tag).left, tag);
         }
     }
 
     void goToLast(const Tag& tag)
     {
         leaveList(tag);
-        refUnit(tag).list->addLast(this);
+        refUnit(tag).list->addLast(shared_from_this());
     }
 
     void deleteNode()
     {
         leaveList(Tag::HASH);
         leaveList(Tag::ORDER);
-        delete this;
         std::cout << "called setLeft " << std::endl;
     }
 
 private:
-    Data* element;
+    std::shared_ptr<Data> element;
 };
