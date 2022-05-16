@@ -1,5 +1,6 @@
-#pragma once
+#include "list.hpp"
 #include "node.hpp"
+#include <iostream>
 
 /******************************************************
 ほしい機能(改良版)
@@ -10,65 +11,31 @@
 *******************************************************/
 
 
-//list1つにつき1つ
-//hashのarrayの要素に一つずつ・入った順番管理listで一つ
-struct List {
-public:
-    List(Node* first, Node* last)
-        : first(first), last(last) {}
+void List::addLast(Node* node)
+{
+    std::cout << "call add last" << std::endl;
+    node->setLeft(this->last, tag);
+    std::cout << "set left" << std::endl;
+    this->last->setRight(node, tag);
+    this->last = node;
+}
 
-    virtual void addLast(Node* node) = 0;
-    virtual void shiftFirst() = 0;
-    virtual void shiftLast() = 0;
-
-protected:
-    Node* first;
-    Node* last;
-};
-
-struct Hash : public List {
-
-    using List::List;
-
-    void addLast(Node* node) override
-    {
-        node->hash.before = this->last;
-        this->last->hash.next = node;
-        this->last = node;
+void List::deleteFirst()
+{
+    //this->first = nullptr;  //TODO hidoi
+    if (this->first) {
+        this->first->deleteNode();
     }
-    void shiftFirst() override
-    {
-        this->first = this->first->hash.next;
-    }
-    void shiftLast() override
-    {
-        this->last = this->last->hash.before;
-    }
-    Node* find(Data* object)
-    {
-        if (!this->first) {
-            return nullptr;
-        }
-        this->first->findLoopForHash(object);
-    }
-};
+}
 
-struct Order : public List {
-
-    using List::List;
-
-    void addLast(Node* node) override
-    {
-        node->order.before = this->last;
-        this->last->order.next = node;
-        this->last = node;
+Node* List::find(Data* object)
+{
+    std::cout << "call find" << std::endl;
+    this->first = nullptr;  //TODO hidoi
+    if (!this->first) {
+        //std::cout << "nullptr: " << this->first << " " << std::endl;
+        return nullptr;
     }
-    void shiftFirst() override
-    {
-        this->first = this->first->order.next;
-    }
-    void shiftLast() override
-    {
-        this->last = this->last->order.before;
-    }
-};
+    std::cout << "go to loop" << std::endl;
+    this->first->findLoop(object, tag);
+}

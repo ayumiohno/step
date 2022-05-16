@@ -7,11 +7,16 @@ public:
         const std::string& content)
         : url(std::move(url)), content(std::move(content)) {}
 
-    ~Data();
+    ~Data() {}
 
     auto getContent()
     {
         return content;
+    }
+
+    auto& refUrl()
+    {
+        return url;
     }
 
 private:

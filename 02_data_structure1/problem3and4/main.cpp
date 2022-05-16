@@ -1,9 +1,18 @@
-#include "data.cpp"
-#include "list.cpp"
+#include "cache.hpp"
+//#include "data.hpp"
 
 int main()
 {
 
+    Data p1{"https://a.com", "aaa"};
+    Data p2{"https://b.ac.jp", "bbb"};
+    Data p3{"https://www.go.jp", "bbb"};
+
+    Cache cache{};
+
+    cache.processData(&p1);
+    cache.processData(&p2);
+    cache.processData(&p2);
 
     //url入手
     //cacheのhash table(array)のうちどこに所属するか
