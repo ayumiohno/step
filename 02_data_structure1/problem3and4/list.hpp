@@ -31,12 +31,12 @@ public:
 
     ~List() {}
 
-    void setFirst(std::weak_ptr<Node> node)
+    void setFirst(std::shared_ptr<Node> node)
     {
         this->first = node;
     }
 
-    void setLast(std::weak_ptr<Node> node)
+    void setLast(std::shared_ptr<Node> node)
     {
         this->last = node;
     }
@@ -47,14 +47,14 @@ public:
         return this->last;
     }*/
 
-    void addLast(std::weak_ptr<Node> node);
+    void addLast(std::shared_ptr<Node> node);
 
     void deleteFirst();
 
-    std::weak_ptr<Node> find(std::string url);
+    std::shared_ptr<Node> find(std::string url);
 
 protected:
-    std::weak_ptr<Node> first;
-    std::weak_ptr<Node> last;
+    std::shared_ptr<Node> first;
+    std::shared_ptr<Node> last;
     Tag tag;
 };

@@ -13,39 +13,39 @@
 *******************************************************/
 
 
-void List::addLast(std::weak_ptr<Node> node)
+void List::addLast(std::shared_ptr<Node> node)
 {
-    std::cout << "call add last" << std::endl;
-    auto node_ptr = node.lock();
+    //std::cout << "call add last" << std::endl;
+    auto node_ptr = node;
     assert(node_ptr != nullptr);
     node_ptr->setLeft(this->last, tag);
-    std::cout << "set left" << std::endl;
-    auto last_ptr = this->last.lock();
+    //std::cout << "set left" << std::endl;
+    auto last_ptr = this->last;
     if (last_ptr != nullptr) {
         last_ptr->setRight(node, tag);
     }
-    if (this->first.lock() == nullptr) {
+    if (this->first == nullptr) {
         this->setFirst(node);
-        std::cout << "new first" << std::endl;
+        //std::cout << "new first" << std::endl;
     }
     this->setLast(node);
 }
 
 void List::deleteFirst()
 {
-    auto first_ptr = this->first.lock();
+    auto first_ptr = this->first;
     assert(first_ptr != nullptr);
     first_ptr->deleteNode();
 }
 
-std::weak_ptr<Node> List::find(std::string url)
+std::shared_ptr<Node> List::find(std::string url)
 {
-    std::cout << "call find" << std::endl;
-    auto first_ptr = this->first.lock();
+    //std::cout << "call find" << std::endl;
+    auto first_ptr = this->first;
     if (first_ptr == nullptr) {
-        std::cout << "nullptr " << std::endl;
+        std::cout << "this list has no first" << std::endl;
         return this->first;
     }
-    std::cout << "go to loop" << std::endl;
+    std::cout << "this list already has first. go to loop" << std::endl;
     return first_ptr->findLoop(url, tag);
 }

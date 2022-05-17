@@ -1,5 +1,6 @@
 #pragma once
 #include "data.hpp"
+#include "data_base.hpp"
 #include "list.hpp"
 #include "node.hpp"
 #include <array>
@@ -17,6 +18,8 @@ struct Cache {
             this->hash_table.at(i) = std::make_shared<List>(Tag::HASH);
         }
         this->order_list = std::make_shared<List>(Tag::ORDER);
+        DataBase database{};
+        this->database = std::move(database);
     }
 
     ~Cache() {}
@@ -28,49 +31,51 @@ struct Cache {
         int score = 1;
         for (auto c : url) {
             score = score * (1 + scores.at(std::abs((int)(c - 'a') % 9))) % 23;
-            std::cout << "checked: " << c << std::endl;
         }
+        std::cout << "url: " << url << " hash: " << score - 1 << std::endl;
         return score - 1;
     }
 
     void processNewData(std::string url, int hash_value)
     {
         ++data_count;
-        std::cout << "called processNew data" << std::endl;
         auto& hash_list = hash_table.at(hash_value);  //TODO
-        std::cout << "get hash_list" << std::endl;
-        if (data_count >= 30) {
+        //std::cout << "get hash_list" << std::endl;
+        if (data_count >= 5) {
             order_list->deleteFirst();
-            std::cout << "delete first" << std::endl;
+            //std::cout << "delete first" << std::endl;
         }
-        auto content = "aaa";  //loadContent(url);
+        auto content = database.loadContent(url);
+        std::cout << "result " << content << std::endl;
         auto new_node = std::make_shared<Node>(std::make_shared<Data>(url, content), hash_list, order_list);
         order_list->addLast(new_node);
         hash_list->addLast(new_node);
-        std::cout << "add last" << std::endl;
+        //std::cout << "add last" << std::endl;
     }
 
     void processData(std::string url)
     {
         int hash_value = getHash(url);
-        std::cout << "done getHash. hash_value: " << hash_value << std::endl;
+        //std::cout << "done getHash. hash_value: " << hash_value << std::endl;
         auto node = hash_table.at(hash_value)->find(url);
 
-        std::cout << "done node: " << std::endl;
-        auto node_ptr = node.lock();
-        std::cout << "done node_ptr: " << std::endl;
+        //std::cout << "done node: " << std::endl;
+        auto node_ptr = node;
+        //std::cout << "done node_ptr: " << std::endl;
         if (node_ptr == nullptr) {
-            std::cout << "null" << std::endl;
+            std::cout << "create new data" << std::endl;
             processNewData(url, hash_value);
         } else {
-            std::cout << "exist" << std::endl;
+            std::cout << "url already exist" << std::endl;
+            node_ptr->showContent();
             node_ptr->goToLast(Tag::ORDER);
+            //std::cout << "go to last" << std::endl;
         }
-        //}
     }
 
     std::array<std::shared_ptr<List>, 23> hash_table;
     std::shared_ptr<List> order_list;
     const std::array<int, 9> scores = {2, 3, 5, 7, 11, 13, 17, 19, 23};
     int data_count = 0;
+    DataBase database;
 };
