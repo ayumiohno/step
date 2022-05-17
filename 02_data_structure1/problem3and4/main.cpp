@@ -1,5 +1,4 @@
 #include "cache.hpp"
-#include <memory>
 
 int main()
 {

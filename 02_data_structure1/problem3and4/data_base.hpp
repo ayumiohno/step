@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 class DataBase
@@ -19,7 +20,7 @@ public:
         std::sort(database.begin(), database.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
     }
 
-    std::string loadContent(const std::string& url)
+    std::string loadContent(const std::string& url) const
     {
         auto lower_ptr = std::lower_bound(
             database.begin(),

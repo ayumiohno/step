@@ -6,8 +6,8 @@
 #include <array>
 #include <iostream>
 #include <memory>
+#include <string>
 
-//hase table の子クラスdehanaku 直接作る
 template <int TABLE_SIZE, int MEMORY_SIZE>
 struct Cache {
 
@@ -23,7 +23,7 @@ struct Cache {
 
     ~Cache() {}
 
-    int getHash(const std::string& url)
+    int getHash(const std::string& url) const
     {
         int score = 1;
         for (const auto& c : url) {

@@ -2,6 +2,7 @@
 #include "data.hpp"
 #include <assert.h>
 #include <memory>
+#include <string>
 
 struct Node;
 

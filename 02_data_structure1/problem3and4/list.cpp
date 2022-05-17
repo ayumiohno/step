@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <iostream>
 #include <memory>
+#include <string>
 
 void List::addLast(std::shared_ptr<Node> node)
 {

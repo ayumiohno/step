@@ -2,6 +2,7 @@
 #include "list.hpp"
 #include <iostream>
 #include <memory>
+#include <string>
 
 struct Node : public std::enable_shared_from_this<Node> {
 
@@ -79,7 +80,7 @@ struct Node : public std::enable_shared_from_this<Node> {
         leaveList(Tag::ORDER);
     }
 
-    void showContent()
+    void showContent() const
     {
         std::cout << "!!!REASULT!!! " << this->element->showContent() << std::endl;
     }
