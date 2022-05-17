@@ -3,20 +3,19 @@
 
 struct Data {
 public:
-    Data(const std::string& url,
-        const std::string& content)
-        : url(std::move(url)), content(std::move(content)) {}
+    Data(std::string url, std::string content)
+        : url(url), content(content) {}
 
     ~Data() {}
 
-    auto getContent()
+    auto showContent()
     {
-        return content;
+        return this->content;
     }
 
     auto getUrl()
     {
-        return url;
+        return this->url;
     }
 
 private:

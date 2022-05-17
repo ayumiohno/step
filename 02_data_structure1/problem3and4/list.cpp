@@ -20,21 +20,20 @@ void List::addLast(std::weak_ptr<Node> node)
     assert(node_ptr != nullptr);
     node_ptr->setLeft(this->last, tag);
     std::cout << "set left" << std::endl;
-    node_ptr->setLeft(this->last, tag);
     auto last_ptr = this->last.lock();
     if (last_ptr != nullptr) {
         last_ptr->setRight(node, tag);
     }
     if (this->first.lock() == nullptr) {
-        this->first = node;
+        this->setFirst(node);
         std::cout << "new first" << std::endl;
     }
-    this->last = node;
+    this->setLast(node);
 }
 
 void List::deleteFirst()
 {
-    auto first_ptr = this->first.lock();  //TODO hidoi
+    auto first_ptr = this->first.lock();
     assert(first_ptr != nullptr);
     first_ptr->deleteNode();
 }
@@ -42,11 +41,11 @@ void List::deleteFirst()
 std::weak_ptr<Node> List::find(std::string url)
 {
     std::cout << "call find" << std::endl;
-    auto first_ptr = this->first.lock();  //TODO hidoi
+    auto first_ptr = this->first.lock();
     if (first_ptr == nullptr) {
         std::cout << "nullptr " << std::endl;
         return this->first;
     }
     std::cout << "go to loop" << std::endl;
-    first_ptr->findLoop(url, tag);
+    return first_ptr->findLoop(url, tag);
 }

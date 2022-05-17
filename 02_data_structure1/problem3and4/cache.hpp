@@ -37,30 +37,28 @@ struct Cache {
     {
         ++data_count;
         std::cout << "called processNew data" << std::endl;
-        auto hash_list = hash_table.at(hash_value);
+        auto& hash_list = hash_table.at(hash_value);  //TODO
         std::cout << "get hash_list" << std::endl;
-        auto content = "aaa";  //loadContent(url);
-        auto new_node = std::make_shared<Node>(std::make_shared<Data>(url, content), hash_list, order_list);
-        hash_list->addLast(new_node);
-        std::cout << "add last" << std::endl;
         if (data_count >= 30) {
             order_list->deleteFirst();
+            std::cout << "delete first" << std::endl;
         }
-        std::cout << "delete first" << std::endl;
-        order_list->addLast(std::move(new_node));
+        auto content = "aaa";  //loadContent(url);
+        auto new_node = std::make_shared<Node>(std::make_shared<Data>(url, content), hash_list, order_list);
+        order_list->addLast(new_node);
+        hash_list->addLast(new_node);
+        std::cout << "add last" << std::endl;
     }
 
     void processData(std::string url)
     {
         int hash_value = getHash(url);
         std::cout << "done getHash. hash_value: " << hash_value << std::endl;
-        /*        if (!hash_table.at(hash_value)) {
-            List hash_list{Tag::HASH};
-            hash_table.at(hash_value) = std::move(hash_list);
-            processNewData(data, hash_value);
-        } else {*/
-        auto node_ptr = hash_table.at(hash_value)->find(url).lock();
-        std::cout << "done node_ptr: " << node_ptr << std::endl;
+        auto node = hash_table.at(hash_value)->find(url);
+
+        std::cout << "done node: " << std::endl;
+        auto node_ptr = node.lock();
+        std::cout << "done node_ptr: " << std::endl;
         if (node_ptr == nullptr) {
             std::cout << "null" << std::endl;
             processNewData(url, hash_value);

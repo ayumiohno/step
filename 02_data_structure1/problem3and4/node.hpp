@@ -25,20 +25,24 @@ struct Node : public std::enable_shared_from_this<Node> {
     {
         if (tag == Tag::HASH) {
             return hash;
-        } else if (tag == Tag::ORDER) {
+        } else {
             return order;
         }
     }
 
     std::weak_ptr<Node> findLoop(std::string url, const Tag& tag)
     {
+        std::cout << this->element->getUrl() << " " << url << std::endl;
         if (this->element->getUrl() == url) {
+            std::cout << "correct! " << std::endl;
             return shared_from_this();
         } else {
             auto right_ptr = refUnit(tag).right.lock();
             if (right_ptr == nullptr) {
+                std::cout << "no right " << std::endl;
                 return refUnit(tag).right;
             } else {
+                std::cout << "next right " << std::endl;
                 right_ptr->findLoop(url, tag);
             }
         }

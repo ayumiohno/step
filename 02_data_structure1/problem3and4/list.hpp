@@ -1,5 +1,6 @@
 #pragma once
 #include "data.hpp"
+#include <assert.h>
 #include <memory>
 
 /******************************************************
@@ -39,6 +40,12 @@ public:
     {
         this->last = node;
     }
+
+    /*std::weak_ptr<Node> getLast()
+    {
+        assert(this->last.lock() != nullptr);
+        return this->last;
+    }*/
 
     void addLast(std::weak_ptr<Node> node);
 

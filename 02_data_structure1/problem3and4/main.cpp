@@ -2,13 +2,14 @@
 #include <memory>
 //#include "data.hpp"
 
+auto generateNode(std::string url)
+{
+    return std::make_shared<Data>(url, "aaa");
+}
+
 int main()
 {
 
-    /*auto p1 = std::make_shared<Data>("https://a.com", "aaa");
-    auto p2 = std::make_shared<Data>("https://b.ac.jp", "bbb");
-    auto p3 = std::make_shared<Data>("https://www.go.jp", "ccc");
-    auto p4 = std::make_shared<Data>("https://www.go.jp", "ccc");*/
     auto url1 = "https://a.com";
     auto url2 = "https://b.ac.jp";
     auto url3 = "https://www.go.jp";
