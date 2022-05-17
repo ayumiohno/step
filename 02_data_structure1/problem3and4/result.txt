@@ -1,0 +1,30 @@
+url: https://a.com hash: 15
+create new data
+!!!REASULT!!! a
+url: https://b.ac.jp hash: 9
+create new data
+!!!REASULT!!! b
+url: https://www.go.jp hash: 12
+create new data
+!!!REASULT!!! www
+url: https://b.ac.jp hash: 9
+url already exist
+!!!REASULT!!! b
+url: https://abcdefg.com hash: 4
+create new data
+!!!REASULT!!! abcdefg
+url: https://utxyz.go.jp hash: 12
+create new data
+!!!REASULT!!! utxyz
+url: https://a.com hash: 15
+create new data
+!!!REASULT!!! a
+url: https://b.ac.jp hash: 9
+url already exist
+!!!REASULT!!! b
+url: http://itc-lms.ecc.u-tokyo.ac.jp hash: 14
+create new data
+!!!REASULT!!! itc-lms
+url: https://xyzut.go.jp hash: 12
+create new data
+!!!REASULT!!! xyzut

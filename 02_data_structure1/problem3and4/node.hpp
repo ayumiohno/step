@@ -14,8 +14,8 @@ struct Node : public std::enable_shared_from_this<Node> {
     Node(std::shared_ptr<Data> element, std::shared_ptr<List> hash_list, std::shared_ptr<List> order_list)
         : element(std::move(element))
     {
-        hash.list = hash_list;
-        order.list = order_list;
+        this->hash.list = std::move(hash_list);
+        this->order.list = std::move(order_list);
     }
 
     ~Node() {}

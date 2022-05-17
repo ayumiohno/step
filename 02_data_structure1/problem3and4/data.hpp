@@ -3,7 +3,7 @@
 
 struct Data {
 public:
-    Data(std::string url, std::string content)
+    Data(const std::string& url, const std::string& content)
         : url(url), content(content) {}
 
     ~Data() {}

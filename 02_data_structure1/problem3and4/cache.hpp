@@ -23,10 +23,10 @@ struct Cache {
 
     ~Cache() {}
 
-    int getHash(std::string url)
+    int getHash(const std::string& url)
     {
         int score = 1;
-        for (auto c : url) {
+        for (const auto& c : url) {
             score = score * (1 + scores.at(std::abs((int)(c - 'a') % 9))) % TABLE_SIZE;
         }
         std::cout << "url: " << url << " hash: " << score - 1 << std::endl;
