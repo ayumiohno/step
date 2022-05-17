@@ -15,11 +15,12 @@ public:
         database.push_back({"https://www.go.jp", "www"});
         database.push_back({"https://abcdefg.com", "abcdefg"});
         database.push_back({"https://utxyz.go.jp", "utxyz"});
-        database.push_back({"https://xyzut.go.jp", "xyzut"});
+        database.push_back({"https://ooo.go.jp", "xyzut"});
         database.push_back({"http://itc-lms.ecc.u-tokyo.ac.jp", "itc-lms"});
         std::sort(database.begin(), database.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
     }
 
+    //urlに対応するcontentを探索
     std::string loadContent(const std::string& url) const
     {
         auto lower_ptr = std::lower_bound(

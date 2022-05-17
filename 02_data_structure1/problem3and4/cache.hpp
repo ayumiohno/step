@@ -23,6 +23,7 @@ struct Cache {
 
     ~Cache() {}
 
+    //urlからhash値を求める
     int getHash(const std::string& url) const
     {
         int score = 1;
@@ -35,29 +36,39 @@ struct Cache {
 
     void processNewData(const std::string& url, const int& hash_value)
     {
+        //order_listの先頭削除(MEMORY_SIZE以上のデータが入っているとき)
         if (data_count >= MEMORY_SIZE) {
             order_list->deleteFirst();
         } else {
             ++data_count;
         }
+        //databaseからcontent読み込み
         auto content = database.loadContent(url);
         std::cout << "!!!REASULT!!! " << content << std::endl;
+        //dataとnode作成
         auto& hash_list = hash_table.at(hash_value);
         auto new_node = std::make_shared<Node>(std::make_shared<Data>(url, content), hash_list, order_list);
+        //order_listの最後に追加
         order_list->addLast(new_node);
+        //hash値に対応するhash_listの最後に追加
         hash_list->addLast(new_node);
     }
 
-    void processData(const std::string& url)
+    void processData(std::string url)
     {
         int hash_value = getHash(url);
+        //hash値に対応するhash_listに既にurlがあるか探索
         auto node = hash_table.at(hash_value)->find(url);
+        //なかった時
         if (node == nullptr) {
             std::cout << "create new data" << std::endl;
             processNewData(url, hash_value);
+            //あった時
         } else {
             std::cout << "url already exist" << std::endl;
+            //content表示
             node->showContent();
+            //nodeをorder_listの最後へ
             node->goToLast(Tag::ORDER);
         }
     }
@@ -66,5 +77,5 @@ struct Cache {
     std::shared_ptr<List> order_list;
     DataBase database;
     const std::array<int, 9> scores = {2, 3, 5, 7, 11, 13, 17, 19, 23};
-    int data_count = 1;
+    int data_count = 0;
 };

@@ -16,6 +16,9 @@ create new data
 url: https://utxyz.go.jp hash: 12
 create new data
 !!!REASULT!!! utxyz
+url: https://ooo.go.jp hash: 14
+create new data
+!!!REASULT!!! xyzut
 url: https://a.com hash: 15
 create new data
 !!!REASULT!!! a
@@ -25,6 +28,3 @@ url already exist
 url: http://itc-lms.ecc.u-tokyo.ac.jp hash: 14
 create new data
 !!!REASULT!!! itc-lms
-url: https://xyzut.go.jp hash: 12
-create new data
-!!!REASULT!!! xyzut
