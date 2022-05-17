@@ -12,4 +12,4 @@
 	* アクセス順のデータの最後に追加する
 
 # 概要
-![structure](https://github.com/ayumiohno/step/tree/main/02_data_structure1/problem3and4/structure.jpg)
+![structure](https://github.com/ayumiohno/step/tree/main/02_data_structure1/problem3and4/structure.png?raw=true)
