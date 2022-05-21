@@ -7,11 +7,11 @@
 
 struct Node {
 
-    Node(Token token, int num) : token(std::move(token)), num(std::move(num)) {}
+    Node(Token token, int ref_num)
+        : token(std::move(token)), ref_num(std::move(ref_num)) {}
     ~Node()
     {
-        std::cerr << "deleted: ";
-        std::cerr << this->num << std::endl;
+        std::cerr << "deleted: " << this->ref_num << std::endl;
     }
 
     void setParent(Node* object) { this->parent = object; }
@@ -23,9 +23,11 @@ struct Node {
         if (this->right != nullptr) {
             object->setLeft(this->right);
             this->right->setParent(object);
+            std::cout << "parent: " << object->getRefNum() << " right: " << this->right->getRefNum() << std::endl;
         }
         this->setRight(object);
         object->setParent(this);
+        std::cout << "parent: " << this->getRefNum() << " right: " << object->getRefNum() << std::endl;
     }
 
     double getValue()
@@ -37,35 +39,33 @@ struct Node {
         } else if (token.isRoot()) {
             assert(right != nullptr);
             auto value = token.getAnswer(right->getValue());
-            std::cerr << "deleting num: ";
-            std::cerr << right->num << std::endl;
             delete right;
+            this->right = nullptr;
             std::cerr << "ROOT: " << value << std::endl;
             return value;
         } else {
             assert(left != nullptr);
             assert(right != nullptr);
             auto left_value = left->getValue();
-            std::cerr << "deleting num: ";
-            std::cerr << left->num << std::endl;
             delete left;
+            this->left = nullptr;
             auto right_value = right->getValue();
-            std::cerr << "deleting num: ";
-            std::cerr << right->num << std::endl;
             delete right;
+            this->right = nullptr;
             auto value = token.calcurate(left_value, right_value);
             std::cerr << "OPERATOR: " << value << std::endl;
             return value;
         }
     }
 
-    int num;
+    int getRefNum() { return this->ref_num; }
 
 private:
     Node* parent;
     Node* left;
     Node* right;
     Token token;
+    int ref_num;
 };
 
 struct AdminTree {
@@ -76,9 +76,11 @@ public:
         this->prior_insert_point = this->root;
         this->non_prior_insert_point = this->root;
     }
+    ~AdminTree() { std::cout << "admin deleted" << std::endl; }
 
     void init()
     {
+        assert(brackets.empty());
         this->prior_insert_point = this->root;
         this->non_prior_insert_point = this->root;
     }
@@ -109,6 +111,7 @@ public:
     {
         prior_insert_point = node;
     }
+
 
 private:
     Node* root;

@@ -17,6 +17,7 @@ void insertNode(Token token, AdminTree& admin_tree)
     } else if (token.isNumber() || token.isFunc()) {
         insert_point = admin_tree.getPriorInsertPoint();
     }
+    std::cout << "insert point of " << num << " : " << insert_point->getRefNum() << std::endl;
     Node* node = new Node{std::move(token), num};
     insert_point->insert(node);
     if (token.isFunc()) {
