@@ -11,6 +11,9 @@ struct Node {
         : token(std::move(token))
     {
         assert(token != nullptr);
+        this->right = nullptr;
+        this->left = nullptr;
+        this->parent = nullptr;
     }
     ~Node() { std::cerr << "node deleted" << std::endl; }
 
@@ -63,7 +66,18 @@ struct Node {
         }
     }
 
+    int getRef()
+    {
+        return ref_num;
+    }
+    void setRef(int num)
+    {
+        this->ref_num = num;
+    }
+
+
 private:
+    int ref_num;
     Node* parent;
     Node* left;
     Node* right;
@@ -101,11 +115,15 @@ public:
 
     Node* getNonPriorInsertPoint()
     {
-        return non_prior_insert_point = brackets.empty() ? root : brackets.top();
+        non_prior_insert_point = brackets.empty() ? root : brackets.top();
+        std::cerr << "is empty " << brackets.empty() << std::endl;
+        std::cerr << "non prior num " << non_prior_insert_point->getRef() << std::endl;
+        return non_prior_insert_point;
     }
 
     Node* getPriorInsertPoint() const
     {
+        std::cerr << "prior num " << prior_insert_point->getRef() << std::endl;
         return prior_insert_point;
     }
 

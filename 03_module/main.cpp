@@ -8,9 +8,7 @@ int main()
 {
     Token* root_token = new Token{Tag::ROOT};
     Node* root = new Node{(root_token)};
-
     AdminTree admin_tree{root};
-    double answer;
 
     while (true) {
         std::string formula;
@@ -19,23 +17,12 @@ int main()
             break;
         }
         readLine(formula, admin_tree);
-        answer = root->getValue();
+        double answer = root->getValue();
         std::cout << formula << " = " << answer << std::endl;
         admin_tree.init();
     }
     delete root_token;
     delete root;
-    /*
-    readLine("0+2", admin_tree);
-    answer = root->getValue();
-    std::cout << "answer: " << answer << std::endl;
-    admin_tree.init();
-
-    readLine("4.3+(1.3+2.5)*((1.23+2.21)*3.45+1.4*2.5)", admin_tree);
-    answer = root->getValue();
-    std::cout << "answer: " << answer << std::endl;
-    admin_tree.init();
-    */
 
     return 0;
 }

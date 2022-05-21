@@ -16,6 +16,7 @@ void insertNode(Token* token, AdminTree& admin_tree)
         insert_point = admin_tree.getPriorInsertPoint();
     }
     Node* node = new Node{(token)};
+    assert(insert_point != nullptr);
     insert_point->insert(node);
     if (token->isFunc()) {
         admin_tree.setPriorInsertPoint(node);
