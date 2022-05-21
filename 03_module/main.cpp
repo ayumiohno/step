@@ -7,7 +7,7 @@
 int main()
 {
     Token root_token{Tag::ROOT};
-    Node* root = new Node{std::move(root_token)};
+    Node* root = new Node{std::move(root_token), 0};
 
     AdminTree admin_tree{root};
     double answer;

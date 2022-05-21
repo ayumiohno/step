@@ -10,17 +10,19 @@
 
 void insertNode(Token token, AdminTree& admin_tree)
 {
+    static int num = 1;
     Node* insert_point;
     if (token.isFunc() && !token.isPrior()) {
         insert_point = admin_tree.getNonPriorInsertPoint();
     } else if (token.isNumber() || token.isFunc()) {
         insert_point = admin_tree.getPriorInsertPoint();
     }
-    Node* node = new Node{std::move(token)};
+    Node* node = new Node{std::move(token), num};
     insert_point->insert(node);
     if (token.isFunc()) {
         admin_tree.setPriorInsertPoint(node);
     }
+    ++num;
 }
 
 void readLine(const std::string& line, AdminTree& admin_tree)

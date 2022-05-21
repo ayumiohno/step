@@ -7,8 +7,12 @@
 
 struct Node {
 
-    Node(Token token) : token(std::move(token)) {}
-    ~Node() {}
+    Node(Token token, int num) : token(std::move(token)), num(std::move(num)) {}
+    ~Node()
+    {
+        std::cerr << "deleted: ";
+        std::cerr << this->num << std::endl;
+    }
 
     void setParent(Node* object) { this->parent = object; }
     void setLeft(Node* object) { this->left = object; }
@@ -33,6 +37,8 @@ struct Node {
         } else if (token.isRoot()) {
             assert(right != nullptr);
             auto value = token.getAnswer(right->getValue());
+            std::cerr << "deleting num: ";
+            std::cerr << right->num << std::endl;
             delete right;
             std::cerr << "ROOT: " << value << std::endl;
             return value;
@@ -40,14 +46,20 @@ struct Node {
             assert(left != nullptr);
             assert(right != nullptr);
             auto left_value = left->getValue();
+            std::cerr << "deleting num: ";
+            std::cerr << left->num << std::endl;
             delete left;
             auto right_value = right->getValue();
+            std::cerr << "deleting num: ";
+            std::cerr << right->num << std::endl;
             delete right;
             auto value = token.calcurate(left_value, right_value);
             std::cerr << "OPERATOR: " << value << std::endl;
             return value;
         }
     }
+
+    int num;
 
 private:
     Node* parent;
