@@ -23,7 +23,6 @@ Token* readNumber(const std::string& line, int& index)
         }
     }
     Token* token = new Token{Tag::NUMBER, number};
-    std::cerr << number << std::endl;
     return token;
 }
 

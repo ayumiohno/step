@@ -16,9 +16,11 @@ int main()
         if (formula == "exit") {
             break;
         }
+        std::cout << formula;
+        formatLine(formula);
         readLine(formula, admin_tree);
         double answer = root->getValue();
-        std::cout << formula << " = " << answer << std::endl;
+        std::cout << " = " << answer << std::endl;
         admin_tree.init();
     }
     delete root_token;

@@ -116,14 +116,11 @@ public:
     Node* getNonPriorInsertPoint()
     {
         non_prior_insert_point = brackets.empty() ? root : brackets.top();
-        std::cerr << "is empty " << brackets.empty() << std::endl;
-        std::cerr << "non prior num " << non_prior_insert_point->getRef() << std::endl;
         return non_prior_insert_point;
     }
 
     Node* getPriorInsertPoint() const
     {
-        std::cerr << "prior num " << prior_insert_point->getRef() << std::endl;
         return prior_insert_point;
     }
 

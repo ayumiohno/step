@@ -23,6 +23,15 @@ void insertNode(Token* token, AdminTree& admin_tree)
     }
 }
 
+void formatLine(std::string& line)
+{
+    int index = 0;
+    if (line.at(0) == '+' || line.at(0) == '-') {
+        line = "0" + line;
+    }
+    assert(isDigit(line.at(0)) || line.at(0) == '(');
+}
+
 void readLine(const std::string& line, AdminTree& admin_tree)
 {
     int index = 0;
