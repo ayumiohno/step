@@ -66,18 +66,7 @@ struct Node {
         }
     }
 
-    int getRef()
-    {
-        return ref_num;
-    }
-    void setRef(int num)
-    {
-        this->ref_num = num;
-    }
-
-
 private:
-    int ref_num;
     Node* parent;
     Node* left;
     Node* right;
