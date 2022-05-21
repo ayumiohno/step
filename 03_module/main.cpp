@@ -105,7 +105,6 @@ Token readPlus(const std::string& line, int& index)
 Token readMinus(const std::string& line, int& index)
 {
     ++index;
-    ++index;
     Token token{Tag::NON_PRIOR,
         [](const auto& a, const auto& b) { return a - b; }};
     return token;
@@ -130,12 +129,7 @@ Token readDividedBy(const std::string& line, int& index)
 struct Node {
 
     Node(Token token) : token(std::move(token)) {}
-    ~Node()
-    {
-        std::cout << "deleted: " << token.isNumber() << token.isFunc() << token.isRoot() << std::endl;
-    }
-
-    void deleteSelf() { delete this; }
+    ~Node() {}
 
     void setParent(Node* object) { this->parent = object; }
     void setLeft(Node* object) { this->left = object; }
@@ -155,22 +149,23 @@ struct Node {
     {
         if (token.isNumber()) {
             auto value = token.getValue();
-            //std::cerr << "NUMBER: " << value << std::endl;
+            std::cerr << "NUMBER: " << value << std::endl;
             return value;
         } else if (token.isRoot()) {
             assert(right != nullptr);
             auto value = token.getAnswer(right->getValue());
-            right->deleteSelf();
-            //std::cout << right->getValue() << std::endl;
-            //std::cerr << "ROOT: " << value << std::endl;
+            delete right;
+            std::cerr << "ROOT: " << value << std::endl;
             return value;
         } else {
             assert(left != nullptr);
             assert(right != nullptr);
-            auto value = token.calcurate(left->getValue(), right->getValue());
-            left->deleteSelf();  //TODO value返した後に消したい
-            right->deleteSelf();
-            //std::cerr << "OPERATOR: " << value << std::endl;
+            auto left_value = left->getValue();
+            delete left;
+            auto right_value = right->getValue();
+            delete right;
+            auto value = token.calcurate(left_value, right_value);
+            std::cerr << "OPERATOR: " << value << std::endl;
             return value;
         }
     }
@@ -206,6 +201,7 @@ public:
     {
         assert(!brackets.empty());
         prior_insert_point = brackets.top();
+        brackets.pop();
     }
 
     Node* getNonPriorInsertPoint()
