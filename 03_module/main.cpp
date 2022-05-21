@@ -6,8 +6,8 @@
 
 int main()
 {
-    Token root_token{Tag::ROOT};
-    Node* root = new Node{std::move(root_token), 0};
+    Token* root_token = new Token{Tag::ROOT};
+    Node* root = new Node{(root_token)};
 
     AdminTree admin_tree{root};
     double answer;
@@ -23,6 +23,7 @@ int main()
         std::cout << formula << " = " << answer << std::endl;
         admin_tree.init();
     }
+    delete root_token;
     delete root;
     /*
     readLine("0+2", admin_tree);

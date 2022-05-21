@@ -1,6 +1,7 @@
 #pragma once
 #include <assert.h>
 #include <functional>
+#include <iostream>
 #include <string>
 
 enum class Tag {
@@ -31,6 +32,7 @@ public:
         assert(tag == Tag::ROOT);
     }
 
+    ~Token() { std::cerr << "token deleted" << std::endl; }
 
     bool isNumber() const { return tag == Tag::NUMBER; }
     bool isFunc() const { return tag == Tag::PRIOR || tag == Tag::NON_PRIOR; }

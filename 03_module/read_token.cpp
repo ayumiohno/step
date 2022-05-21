@@ -1,4 +1,3 @@
-#pragma once
 #include "def_token.hpp"
 #include "read_token.hpp"
 #include <assert.h>
@@ -7,7 +6,7 @@
 
 bool isDigit(const char& c) { return int(c) >= int('0') && int(c) - int('0') <= 9; }
 
-Token readNumber(const std::string& line, int& index)
+Token* readNumber(const std::string& line, int& index)
 {
     double number = 0;
     while (index < line.size() && isDigit(line.at(index))) {
@@ -23,38 +22,38 @@ Token readNumber(const std::string& line, int& index)
             ++index;
         }
     }
-    Token token{Tag::NUMBER, number};
+    Token* token = new Token{Tag::NUMBER, number};
     return token;
 }
 
-Token readPlus(const std::string& line, int& index)
+Token* readPlus(const std::string& line, int& index)
 {
     ++index;
-    Token token{Tag::NON_PRIOR,
+    Token* token = new Token{Tag::NON_PRIOR,
         [](const auto& a, const auto& b) { return a + b; }};
     return token;
 }
 
-Token readMinus(const std::string& line, int& index)
+Token* readMinus(const std::string& line, int& index)
 {
     ++index;
-    Token token{Tag::NON_PRIOR,
+    Token* token = new Token{Tag::NON_PRIOR,
         [](const auto& a, const auto& b) { return a - b; }};
     return token;
 }
 
-Token readTimes(const std::string& line, int& index)
+Token* readTimes(const std::string& line, int& index)
 {
     ++index;
-    Token token{Tag::PRIOR,
+    Token* token = new Token{Tag::PRIOR,
         [](const auto& a, const auto& b) { return a * b; }};
     return token;
 }
 
-Token readDividedBy(const std::string& line, int& index)
+Token* readDividedBy(const std::string& line, int& index)
 {
     ++index;
-    Token token{Tag::PRIOR,
+    Token* token = new Token{Tag::PRIOR,
         [](const auto& a, const auto& b) { return a / b; }};
     return token;
 }

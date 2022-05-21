@@ -7,4 +7,9 @@ fi
 if [ -e result.txt ]; then
 	rm result.txt
 fi
-./a.out > result.txt
+read -p "Press is_testcase : " is_testcase
+if [ $is_testcase == 1 ]; then
+    ./a.out < testcase.txt > result.txt
+else
+    ./a.out > result.txt
+fi
