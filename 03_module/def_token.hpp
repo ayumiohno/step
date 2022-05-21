@@ -20,13 +20,13 @@ public:
         assert(tag == Tag::PRIOR || tag == Tag::NON_PRIOR);
     }
 
-    Token(const Tag& tag, double value)
+    Token(Tag tag, double value)
         : tag(std::move(tag)), value(std::move(value))
     {
         assert(tag == Tag::NUMBER);
     }
 
-    Token(const Tag& tag)
+    Token(Tag tag)
         : tag(std::move(tag))
     {
         assert(tag == Tag::ROOT);

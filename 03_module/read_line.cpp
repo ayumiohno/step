@@ -7,18 +7,18 @@
 #include <string>
 
 
-void insertNode(Token* token, AdminTree& admin_tree)
+void insertNode(const Token& token, AdminTree& admin_tree)
 {
     Node* insert_point;
-    if (token->isFunc() && !token->isPrior()) {
+    if (token.isFunc() && !token.isPrior()) {
         insert_point = admin_tree.getNonPriorInsertPoint();
-    } else if (token->isNumber() || token->isFunc()) {
+    } else if (token.isNumber() || token.isFunc()) {
         insert_point = admin_tree.getPriorInsertPoint();
     }
-    Node* node = new Node{(token)};
+    Node* node = new Node{token};
     assert(insert_point != nullptr);
     insert_point->insert(node);
-    if (token->isFunc()) {
+    if (node->isNodeOfFunc()) {
         admin_tree.setPriorInsertPoint(node);
     }
 }

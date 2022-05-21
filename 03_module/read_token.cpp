@@ -6,7 +6,7 @@
 
 bool isDigit(const char& c) { return int(c) >= int('0') && int(c) - int('0') <= 9; }
 
-Token* readNumber(const std::string& line, int& index)
+Token readNumber(const std::string& line, int& index)
 {
     double number = 0.0;
     while (index < line.size() && isDigit(line.at(index))) {
@@ -22,38 +22,33 @@ Token* readNumber(const std::string& line, int& index)
             ++index;
         }
     }
-    Token* token = new Token{Tag::NUMBER, number};
-    return token;
+    return Token{Tag::NUMBER, std::move(number)};
 }
 
-Token* readPlus(const std::string& line, int& index)
+Token readPlus(const std::string& line, int& index)
 {
     ++index;
-    Token* token = new Token{Tag::NON_PRIOR,
+    return Token{Tag::NON_PRIOR,
         [](const auto& a, const auto& b) { return a + b; }};
-    return token;
 }
 
-Token* readMinus(const std::string& line, int& index)
+Token readMinus(const std::string& line, int& index)
 {
     ++index;
-    Token* token = new Token{Tag::NON_PRIOR,
+    return Token{Tag::NON_PRIOR,
         [](const auto& a, const auto& b) { return a - b; }};
-    return token;
 }
 
-Token* readTimes(const std::string& line, int& index)
+Token readTimes(const std::string& line, int& index)
 {
     ++index;
-    Token* token = new Token{Tag::PRIOR,
+    return Token{Tag::PRIOR,
         [](const auto& a, const auto& b) { return a * b; }};
-    return token;
 }
 
-Token* readDividedBy(const std::string& line, int& index)
+Token readDividedBy(const std::string& line, int& index)
 {
     ++index;
-    Token* token = new Token{Tag::PRIOR,
+    return Token{Tag::PRIOR,
         [](const auto& a, const auto& b) { return a / b; }};
-    return token;
 }

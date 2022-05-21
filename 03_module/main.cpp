@@ -6,8 +6,7 @@
 
 int main()
 {
-    Token* root_token = new Token{Tag::ROOT};
-    Node* root = new Node{(root_token)};
+    Node* root = new Node{Token{Tag::ROOT}};
     AdminTree admin_tree{root};
 
     while (true) {
@@ -23,7 +22,6 @@ int main()
         std::cout << " = " << answer << std::endl;
         admin_tree.init();
     }
-    delete root_token;
     delete root;
 
     return 0;

@@ -7,10 +7,9 @@
 
 struct Node {
 
-    Node(Token* token)
+    Node(const Token& token)
         : token(std::move(token))
     {
-        assert(token != nullptr);
         this->right = nullptr;
         this->left = nullptr;
         this->parent = nullptr;
@@ -20,12 +19,6 @@ struct Node {
     void setParent(Node* object) { this->parent = object; }
     void setLeft(Node* object) { this->left = object; }
     void setRight(Node* object) { this->right = object; }
-
-    void deleteSelf()
-    {
-        delete this->token;
-        delete this;
-    }
 
     void insert(Node* object)
     {
@@ -38,16 +31,18 @@ struct Node {
         object->setParent(this);
     }
 
+    bool isNodeOfFunc() const { return this->token.isFunc(); };
+
     double getValue()
     {
-        if (token->isNumber()) {
-            auto value = token->getValue();
+        if (token.isNumber()) {
+            auto value = token.getValue();
             std::cerr << "NUMBER: " << value << std::endl;
             return value;
-        } else if (token->isRoot()) {
+        } else if (token.isRoot()) {
             assert(right != nullptr);
-            auto value = token->getAnswer(right->getValue());
-            right->deleteSelf();
+            auto value = token.getAnswer(right->getValue());
+            delete this->right;
             this->right = nullptr;
             std::cerr << "ROOT: " << value << std::endl;
             return value;
@@ -55,12 +50,12 @@ struct Node {
             assert(left != nullptr);
             assert(right != nullptr);
             auto left_value = left->getValue();
-            left->deleteSelf();
+            delete this->left;
             this->left = nullptr;
             auto right_value = right->getValue();
-            right->deleteSelf();
+            delete this->right;
             this->right = nullptr;
-            auto value = token->calcurate(left_value, right_value);
+            auto value = token.calcurate(left_value, right_value);
             std::cerr << "OPERATOR: " << value << std::endl;
             return value;
         }
@@ -70,7 +65,7 @@ private:
     Node* parent;
     Node* left;
     Node* right;
-    Token* token;
+    Token token;
 };
 
 struct AdminTree {
@@ -115,7 +110,7 @@ public:
 
     void setPriorInsertPoint(Node* node)
     {
-        prior_insert_point = node;
+        prior_insert_point = std::move(node);
     }
 
 
