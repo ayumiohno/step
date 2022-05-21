@@ -8,7 +8,7 @@ bool isDigit(const char& c) { return int(c) >= int('0') && int(c) - int('0') <= 
 
 Token* readNumber(const std::string& line, int& index)
 {
-    double number = 0;
+    double number = 0.0;
     while (index < line.size() && isDigit(line.at(index))) {
         number = number * 10 + (int(line.at(index)) - int('0'));
         ++index;
@@ -23,6 +23,7 @@ Token* readNumber(const std::string& line, int& index)
         }
     }
     Token* token = new Token{Tag::NUMBER, number};
+    std::cerr << number << std::endl;
     return token;
 }
 

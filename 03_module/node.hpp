@@ -8,7 +8,10 @@
 struct Node {
 
     Node(Token* token)
-        : token(std::move(token)) {}
+        : token(std::move(token))
+    {
+        assert(token != nullptr);
+    }
     ~Node() { std::cerr << "node deleted" << std::endl; }
 
     void setParent(Node* object) { this->parent = object; }
@@ -23,6 +26,7 @@ struct Node {
 
     void insert(Node* object)
     {
+        assert(object != nullptr);
         if (this->right != nullptr) {
             object->setLeft(this->right);
             this->right->setParent(object);
