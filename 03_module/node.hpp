@@ -91,6 +91,7 @@ public:
     void startBracket()
     {
         brackets.push({node_before, prior_insert_point});
+        this->prior_insert_point = this->node_before;
     }
 
     void endBracket()
