@@ -32,6 +32,7 @@ struct Node {
     }
 
     bool isNodeOfFunc() const { return this->token.isFunc(); };
+    bool isNodeOfPrior() const { return this->token.isPrior(); };
 
     double getValue()
     {
@@ -75,6 +76,7 @@ public:
     {
         this->prior_insert_point = this->root;
         this->non_prior_insert_point = this->root;
+        this->node_before = this->root;
     }
     ~AdminTree() { std::cerr << "admin_tree deleted" << std::endl; }
 
@@ -83,23 +85,24 @@ public:
         assert(brackets.empty());
         this->prior_insert_point = this->root;
         this->non_prior_insert_point = this->root;
+        this->node_before = this->root;
     }
 
     void startBracket()
     {
-        brackets.push(prior_insert_point);
+        brackets.push({node_before, prior_insert_point});
     }
 
     void endBracket()
     {
         assert(!brackets.empty());
-        prior_insert_point = brackets.top();
+        prior_insert_point = brackets.top().second;
         brackets.pop();
     }
 
     Node* getNonPriorInsertPoint()
     {
-        non_prior_insert_point = brackets.empty() ? root : brackets.top();
+        non_prior_insert_point = brackets.empty() ? root : brackets.top().first;
         return non_prior_insert_point;
     }
 
@@ -108,15 +111,25 @@ public:
         return prior_insert_point;
     }
 
+    Node* getNodeBefore() const
+    {
+        return node_before;
+    }
+
     void setPriorInsertPoint(Node* node)
     {
         prior_insert_point = std::move(node);
     }
 
+    void setNodeBefore(Node* node)
+    {
+        node_before = std::move(node);
+    }
 
 private:
     Node* root;
     Node* prior_insert_point;
     Node* non_prior_insert_point;
-    std::stack<Node*> brackets;
+    Node* node_before;
+    std::stack<std::pair<Node*, Node*>> brackets;
 };

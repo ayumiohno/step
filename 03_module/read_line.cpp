@@ -12,14 +12,19 @@ void insertNode(const Token& token, AdminTree& admin_tree)
     Node* insert_point;
     if (token.isFunc() && !token.isPrior()) {
         insert_point = admin_tree.getNonPriorInsertPoint();
-    } else if (token.isNumber() || token.isFunc()) {
+    } else if (token.isFunc()) {
         insert_point = admin_tree.getPriorInsertPoint();
+    } else if (token.isNumber()) {
+        insert_point = admin_tree.getNodeBefore();
     }
     Node* node = new Node{token};
     assert(insert_point != nullptr);
     insert_point->insert(node);
     if (node->isNodeOfFunc()) {
-        admin_tree.setPriorInsertPoint(node);
+        admin_tree.setNodeBefore(node);
+        if (!node->isNodeOfPrior()) {
+            admin_tree.setPriorInsertPoint(node);
+        }
     }
 }
 
