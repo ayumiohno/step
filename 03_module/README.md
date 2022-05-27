@@ -52,6 +52,9 @@
 * 緑がprior_insert_point、オレンジがnon_prior_insert_pointである
 ![](tree_simple.jpg)
 
+### 図(1-(2*(3+4))の説明用)
+![](tree_simple2.jpg)
+
 # 工夫した点(機能拡張について)
 * +-, あるいは×÷と同様の優先度と引数を持った演算子の追加は、以下の2つの操作のみで可能である
     * read_token(std::function<double(double, double)>を持つtokenを返す関数)の追加
