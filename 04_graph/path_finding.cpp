@@ -22,9 +22,10 @@ void showPath(const std::unordered_map<std::string, std::string>& pages,
     const std::function<std::string(LIST&)>& get_first)
 {
     while (!list.empty()) {
-        std::cout << pages.at(get_first(list)) << std::endl;
+        std::cout << pages.at(get_first(list)) << " ";
         list.pop();
     }
+    std::cout << std::endl;
 }
 
 void depthFirstSearch(const std::string& start_value,
@@ -48,33 +49,37 @@ void depthFirstSearch(const std::string& start_value,
     list.push(start_key);
     is_searched.insert(start_key);
 
-    while (!list.empty()) {
+    bool is_found = false;
+    while (!list.empty() && !is_found) {
         auto v = list.top();
         if (links.count(v)) {
-            auto is_found = false;
+            auto is_node_exist = false;
             for (auto link : links.at(v)) {
                 if (link == goal_key) {
                     is_searched.insert(link);
                     list.push(link);
                     is_found = true;
-                    std::cout << "START!" << std::endl;
-                    showPath<std::stack<std::string>>(pages, list, get_first);
-                    std::cout << "GOAL!" << std::endl;
+                    is_node_exist = true;
                     break;
                 }
                 if (!is_searched.count(link)) {
                     is_searched.insert(link);
                     list.push(link);
-                    is_found = true;
+                    is_node_exist = true;
                     break;
                 }
             }
-            if (!is_found) {
+            if (!is_node_exist) {
                 list.pop();
             }
         } else {
             list.pop();
         }
+    }
+    if (is_found) {
+        std::cout << "START!" << std::endl;
+        showPath<std::stack<std::string>>(pages, list, get_first);
+        std::cout << "GOAL!" << std::endl;
     }
 }
 
@@ -121,8 +126,9 @@ void breadthFirstSearch(const std::string& start_value,
     if (is_found) {
         auto node = goal_key;
         while (node != "\n") {
-            std::cout << pages.at(node) << std::endl;
+            std::cout << pages.at(node) << " ";
             node = parent.at(node);
         }
+        std::cout << std::endl;
     }
 }
