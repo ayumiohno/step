@@ -1,10 +1,11 @@
+#include "path_finding.hpp"
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <map>
-#include <set>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 void readFile(const std::string&& file_name,
     const std::function<void(std::string, std::string)>&& process_data)
@@ -22,8 +23,8 @@ void readFile(const std::string&& file_name,
 
 int main()
 {
-    std::map<std::string, std::string> pages;
-    std::map<std::string, std::set<std::string>> links;
+    std::unordered_map<std::string, std::string> pages;
+    std::unordered_map<std::string, std::unordered_set<std::string>> links;
     readFile("testcase/pages_small.txt", [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; });
     readFile("testcase/links_small.txt", [&links](auto arg1, auto arg2) { links[arg1].insert(arg2); });
 
@@ -32,6 +33,22 @@ int main()
         if (page.second == "Google") {
             std::cout << page.second << " " << page.first << std::endl;
             break;
+        }
+    }
+
+    while (true) {
+        std::string start_value, goal_value;
+        std::cin >> start_value;
+        if (start_value == "0") {
+            std::cerr << "exit" << std::endl;
+            break;
+        }
+        std::cin >> goal_value;
+        try {
+            depthFirstSearch(start_value, goal_value, pages, links);
+            breadthFirstSearch(start_value, goal_value, pages, links);
+        } catch (NoSuchValueException& error) {
+            error.printError();
         }
     }
 
