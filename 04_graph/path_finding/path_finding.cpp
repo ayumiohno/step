@@ -16,18 +16,6 @@ auto findKey(const std::string& value,
     throw error;
 }
 
-template <class LIST>
-void showPath(const std::unordered_map<std::string, std::string>& pages,
-    LIST& list,
-    const std::function<std::string(LIST&)>& get_first)
-{
-    while (!list.empty()) {
-        std::cout << pages.at(get_first(list)) << " ";
-        list.pop();
-    }
-    std::cout << std::endl;
-}
-
 void depthFirstSearch(const std::string& start_value,
     const std::string& goal_value,
     const std::unordered_map<std::string, std::string>& pages,
@@ -42,7 +30,6 @@ void depthFirstSearch(const std::string& start_value,
         throw error;
     }
 
-    auto get_first = [](std::stack<std::string>& list) { return list.top(); };
     std::stack<std::string> list;
 
     std::unordered_set<std::string> is_searched;
@@ -77,9 +64,11 @@ void depthFirstSearch(const std::string& start_value,
         }
     }
     if (is_found) {
-        std::cout << "START!" << std::endl;
-        showPath<std::stack<std::string>>(pages, list, get_first);
-        std::cout << "GOAL!" << std::endl;
+        while (!list.empty()) {
+            std::cout << pages.at(list.top()) << " ";
+            list.pop();
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -97,7 +86,6 @@ void breadthFirstSearch(const std::string& start_value,
         throw error;
     }
 
-    auto get_first = [](std::queue<std::string>& list) { return list.front(); };
     std::queue<std::string> list;
 
     std::unordered_map<std::string, std::string> parent;

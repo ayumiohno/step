@@ -25,16 +25,16 @@ int main()
 {
     std::unordered_map<std::string, std::string> pages;
     std::unordered_map<std::string, std::unordered_set<std::string>> links;
-    readFile("testcase/pages.txt", [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; });
-    readFile("testcase/links.txt", [&links](auto arg1, auto arg2) { links[arg1].insert(arg2); });
+    readFile("../testcase/pages.txt", [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; });
+    readFile("../testcase/links.txt", [&links](auto arg1, auto arg2) { links[arg1].insert(arg2); });
 
 
-    for (const auto& page : pages) {
+    /*for (const auto& page : pages) {
         if (page.second == "Google") {
             std::cout << page.second << " " << page.first << std::endl;
             break;
         }
-    }
+    }*/
 
     while (true) {
         std::string start_value, goal_value;
