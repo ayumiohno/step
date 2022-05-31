@@ -12,7 +12,7 @@ void distributePointsToEdges(
     std::unordered_map<uint32_t,
         std::pair<uint32_t,
             std::unordered_map<uint32_t, uint16_t>>>& links,
-    const uint8_t& random_rate)
+    const uint8_t& random_rate)  //何分の一をrandomに振り分けるか
 {
     for (auto& link : links) {
         uint16_t num_of_edges = link.second.second.size();
@@ -27,7 +27,7 @@ void distributePointsToEdges(
     }
 }
 
-void getPointsFromEdges(
+void sumPointsFromEdges(
     std::unordered_map<uint32_t,
         std::pair<uint32_t,
             std::unordered_map<uint32_t, uint16_t>>>& links,
@@ -52,8 +52,8 @@ void updatePageRank(
         std::cerr << "loop: " << i << std::endl;
         distributePointsToEdges(links, random_rate);
         std::cerr << "end distribution" << std::endl;
-        getPointsFromEdges(links, random_rate);
-        std::cerr << "end sum,ation" << std::endl;
+        sumPointsFromEdges(links, random_rate);
+        std::cerr << "end summation" << std::endl;
     }
 }
 
@@ -75,9 +75,14 @@ void printTopXPages(
             std::unordered_map<uint32_t, uint16_t>>>& links,
     uint8_t num_of_showing_pages)
 {
-    auto greater = [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) { return a.first > b.first; };
-    std::priority_queue<std::pair<uint32_t, uint32_t>, std::vector<std::pair<uint32_t, uint32_t>>, decltype(greater)> top_x_list;
+    auto greater = [](const std::pair<uint32_t, uint32_t>& a,
+                       const std::pair<uint32_t, uint32_t>& b) { return a.first > b.first; };
+    std::priority_queue<std::pair<uint32_t, uint32_t>,
+        std::vector<std::pair<uint32_t, uint32_t>>,
+        decltype(greater)>
+        top_x_list;  //top x個のpoint, key(id)を保存
 
+    //top_x_listの作成
     uint8_t count = 0;
     for (const auto& link : links) {
         if (count < num_of_showing_pages) {
@@ -91,6 +96,8 @@ void printTopXPages(
             }
         }
     }
+
+    //top_x_listの出力
     while (!top_x_list.empty()) {
         std::cout << pages.at(top_x_list.top().second) << " : " << (int)top_x_list.top().first << std::endl;
         top_x_list.pop();
