@@ -37,30 +37,30 @@ void depthFirstSearch(const std::string& start_value,
     list.push(start_key);
     is_searched.insert(start_key);
 
+    /*DFS*/
     bool is_found = false;
     while (!list.empty() && !is_found) {
         auto parent = list.top();
         if (links.count(parent)) {
             auto is_node_exist = false;
-            for (auto link : links.at(parent)) {
+            for (auto link : links.at(parent)) {  //goalにたどり着いた
                 if (link == goal_key) {
                     is_searched.insert(link);
                     list.push(link);
                     is_found = true;
                     is_node_exist = true;
                     break;
-                }
-                if (!is_searched.count(link)) {
+                } else if (!is_searched.count(link)) {  //訪問未済のnode
                     is_searched.insert(link);
                     list.push(link);
                     is_node_exist = true;
                     break;
                 }
             }
-            if (!is_node_exist) {
+            if (!is_node_exist) {  //訪問未済のnodeが残ってない
                 list.pop();
             }
-        } else {
+        } else {  //そもそもlinkされたnodeがない
             list.pop();
         }
     }
@@ -105,13 +105,13 @@ void breadthFirstSearch(const std::string& start_value,
         list.pop();
         if (links.count(parent)) {
             for (auto link : links.at(parent)) {
-                if (link == goal_key) {
+                if (link == goal_key) {  //goalにたどり着いた
                     parent_list[link] = parent;
                     list.push(link);
                     is_goal_found = true;
                     break;
                 }
-                if (!parent_list.count(link)) {
+                if (!parent_list.count(link)) {  //訪問未済のnode
                     parent_list[link] = parent;
                     list.push(link);
                 }
