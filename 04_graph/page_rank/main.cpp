@@ -27,15 +27,15 @@ void readFile(const std::string&& file_name,
 
 int main()
 {
-    std::unordered_map<std::string, std::string> pages;
-    std::unordered_map<std::string, std::pair<uint16_t, std::map<std::string, uint8_t>>> links;
+    std::unordered_map<uint32_t, std::string> pages;
+    std::unordered_map<uint32_t, std::pair<uint16_t, std::map<uint32_t, uint8_t>>> links;
 
     auto readFile1 = [&pages]() { readFile("../testcase/pages_small.txt",
-                                      [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; }); };
+                                      [&pages](auto arg1, auto arg2) { pages[(uint32_t)(std::stoi(arg1))] = arg2; }); };
     auto readFile2 = [&links]() { readFile("../testcase/links_small.txt",
                                       [&links](auto arg1, auto arg2) {
-        links[arg1].first = 50;
-        links[arg1].second[arg2] = 0; }); };
+        links[(uint32_t)(std::stoi(arg1))].first = 50;
+        links[(uint32_t)(std::stoi(arg1))].second[(uint32_t)(std::stoi(arg2))] = 0; }); };
 
     std::thread th1(readFile1);
     std::thread th2(readFile2);
@@ -44,7 +44,6 @@ int main()
     std::cerr << "th1 end" << std::endl;
     th2.join();
     std::cerr << "th2 end" << std::endl;
-
 
     updatePageRank(links, 5);
 
