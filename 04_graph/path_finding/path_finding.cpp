@@ -5,7 +5,7 @@
 #include <stack>
 
 auto findKey(const std::string& value,
-    const std::unordered_map<std::string, std::string>& pages)
+    const std::unordered_map<uint32_t, std::string>& pages)
 {
     for (const auto& page : pages) {
         if (page.second == value) {
@@ -18,11 +18,11 @@ auto findKey(const std::string& value,
 
 void depthFirstSearch(const std::string& start_value,
     const std::string& goal_value,
-    const std::unordered_map<std::string, std::string>& pages,
-    const std::unordered_map<std::string, std::unordered_set<std::string>>& links)
+    const std::unordered_map<uint32_t, std::string>& pages,
+    const std::unordered_map<uint32_t, std::unordered_set<uint32_t>>& links)
 {
-    std::string start_key;
-    std::string goal_key;
+    uint32_t start_key;
+    uint32_t goal_key;
     try {
         start_key = findKey(start_value, pages);
         goal_key = findKey(goal_value, pages);
@@ -30,9 +30,9 @@ void depthFirstSearch(const std::string& start_value,
         throw error;
     }
 
-    std::stack<std::string> list;
+    std::stack<uint32_t> list;
 
-    std::unordered_set<std::string> is_searched;
+    std::unordered_set<uint32_t> is_searched;
     list.push(start_key);
     is_searched.insert(start_key);
 
@@ -69,16 +69,18 @@ void depthFirstSearch(const std::string& start_value,
             list.pop();
         }
         std::cout << std::endl;
+    } else {
+        std::cout << "Not found." << std::endl;
     }
 }
 
 void breadthFirstSearch(const std::string& start_value,
     const std::string& goal_value,
-    const std::unordered_map<std::string, std::string>& pages,
-    const std::unordered_map<std::string, std::unordered_set<std::string>>& links)
+    const std::unordered_map<uint32_t, std::string>& pages,
+    const std::unordered_map<uint32_t, std::unordered_set<uint32_t>>& links)
 {
-    std::string start_key;
-    std::string goal_key;
+    uint32_t start_key;
+    uint32_t goal_key;
     try {
         start_key = findKey(start_value, pages);
         goal_key = findKey(goal_value, pages);
@@ -86,11 +88,11 @@ void breadthFirstSearch(const std::string& start_value,
         throw error;
     }
 
-    std::queue<std::string> list;
+    std::queue<uint32_t> list;
 
-    std::unordered_map<std::string, std::string> parent;
+    std::unordered_map<uint32_t, uint32_t> parent;
     list.push(start_key);
-    parent[start_key] = "\n";
+    parent[start_key] = 1 << 30;
 
     bool is_found = false;
     while (!list.empty() && !is_found) {
@@ -108,15 +110,17 @@ void breadthFirstSearch(const std::string& start_value,
                     list.push(link);
                 }
             }
-            list.pop();
         }
+        list.pop();
     }
     if (is_found) {
         auto node = goal_key;
-        while (node != "\n") {
+        while (node != 1 << 30) {
             std::cout << pages.at(node) << " ";
             node = parent.at(node);
         }
         std::cout << std::endl;
+    } else {
+        std::cout << "Not found." << std::endl;
     }
 }

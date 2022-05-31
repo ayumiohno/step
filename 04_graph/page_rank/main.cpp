@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <utility>
 
-static std::mutex m;
+//static std::mutex m;
 
 void readFile(const std::string&& file_name,
     const std::function<void(std::string, std::string)>& process_data)

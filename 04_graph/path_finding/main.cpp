@@ -8,7 +8,7 @@
 #include <unordered_set>
 
 void readFile(const std::string&& file_name,
-    const std::function<void(std::string, std::string)>&& process_data)
+    const std::function<void(std::string, std::string)>& process_data)
 {
     std::ifstream file(file_name);
     std::string data;
@@ -23,18 +23,14 @@ void readFile(const std::string&& file_name,
 
 int main()
 {
-    std::unordered_map<std::string, std::string> pages;
-    std::unordered_map<std::string, std::unordered_set<std::string>> links;
-    readFile("../testcase/pages.txt", [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; });
-    readFile("../testcase/links.txt", [&links](auto arg1, auto arg2) { links[arg1].insert(arg2); });
+    std::unordered_map<uint32_t, std::string> pages;
+    std::unordered_map<uint32_t, std::unordered_set<uint32_t>> links;
+    readFile("../testcase/pages.txt",
+        [&pages](auto arg1, auto arg2) { pages[(uint32_t)(std::stoi(arg1))] = arg2; });
+    readFile("../testcase/links.txt",
+        [&links](auto arg1, auto arg2) { links[(uint32_t)(std::stoi(arg1))].insert((uint32_t)(std::stoi(arg2))); });
 
-
-    /*for (const auto& page : pages) {
-        if (page.second == "Google") {
-            std::cout << page.second << " " << page.first << std::endl;
-            break;
-        }
-    }*/
+    std::cerr << "end reading file" << std::endl;
 
     while (true) {
         std::string start_value, goal_value;
@@ -46,7 +42,9 @@ int main()
         std::cin >> goal_value;
         try {
             depthFirstSearch(start_value, goal_value, pages, links);
+            std::cerr << "end dfs" << std::endl;
             breadthFirstSearch(start_value, goal_value, pages, links);
+            std::cerr << "end bfs" << std::endl;
         } catch (NoSuchValueException& error) {
             error.printError();
         }

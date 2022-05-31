@@ -20,10 +20,10 @@ private:
 
 void depthFirstSearch(const std::string& start_value,
     const std::string& goal_value,
-    const std::unordered_map<std::string, std::string>& pages,
-    const std::unordered_map<std::string, std::unordered_set<std::string>>& links);
+    const std::unordered_map<uint32_t, std::string>& pages,
+    const std::unordered_map<uint32_t, std::unordered_set<uint32_t>>& links);
 
 void breadthFirstSearch(const std::string& start_value,
     const std::string& goal_value,
-    const std::unordered_map<std::string, std::string>& pages,
-    const std::unordered_map<std::string, std::unordered_set<std::string>>& links);
+    const std::unordered_map<uint32_t, std::string>& pages,
+    const std::unordered_map<uint32_t, std::unordered_set<uint32_t>>& links);
