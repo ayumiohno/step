@@ -5,6 +5,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -28,12 +29,22 @@ int main()
 {
     std::unordered_map<std::string, std::string> pages;
     std::unordered_map<std::string, std::pair<int, std::map<std::string, uint8_t>>> links;
-    readFile("../testcase/pages.txt",
-        [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; });
-    readFile("../testcase/links.txt",
-        [&links](auto arg1, auto arg2) {
+
+    auto readFile1 = [&pages]() { readFile("../testcase/pages.txt",
+                                      [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; }); };
+    auto readFile2 = [&links]() { readFile("../testcase/links.txt",
+                                      [&links](auto arg1, auto arg2) {
         links[arg1].first = 50;
-        links[arg1].second[arg2] = 0; });
+        links[arg1].second[arg2] = 0; }); };
+
+    std::thread th1(readFile1);
+    std::thread th2(readFile2);
+
+    th1.join();
+    std::cerr << "th1 end" << std::endl;
+    th2.join();
+    std::cerr << "th2 end" << std::endl;
+
 
     updatePageRank(links, 5);
 
