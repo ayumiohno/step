@@ -11,7 +11,7 @@
 void distributePointsToEdges(
     const std::vector<std::unordered_map<uint32_t,
         std::pair<uint16_t,
-            std::map<uint32_t, uint8_t>>>::iterator>& list,
+            std::unordered_map<uint32_t, uint8_t>>>::iterator>& list,
     const uint8_t& random_rate,
     const uint8_t&& th_id)
 {
@@ -34,7 +34,7 @@ void distributePointsToEdges(
 void getPointsFromEdges(
     std::unordered_map<uint32_t,
         std::pair<uint16_t,
-            std::map<uint32_t, uint8_t>>>& links,
+            std::unordered_map<uint32_t, uint8_t>>>& links,
     const uint8_t& random_rate)
 {
     for (auto& link : links) {
@@ -48,13 +48,13 @@ void getPointsFromEdges(
 void updatePageRank(
     std::unordered_map<uint32_t,
         std::pair<uint16_t,
-            std::map<uint32_t, uint8_t>>>& links,
+            std::unordered_map<uint32_t, uint8_t>>>& links,
     const std::size_t&& loop_times,
     const uint8_t&& random_rate)
 {
     std::vector<std::unordered_map<uint32_t,
         std::pair<uint16_t,
-            std::map<uint32_t, uint8_t>>>::iterator>
+            std::unordered_map<uint32_t, uint8_t>>>::iterator>
         list;
 
     for (auto itr = links.begin(); itr != links.end(); ++itr) {
@@ -87,7 +87,7 @@ void printAllRank(
     const std::unordered_map<uint32_t, std::string>& pages,
     std::unordered_map<uint32_t,
         std::pair<uint16_t,
-            std::map<uint32_t, uint8_t>>>& links)
+            std::unordered_map<uint32_t, uint8_t>>>& links)
 {
     for (const auto& link : links) {
         std::cout << pages.at(link.first) << " : " << (int)link.second.first << std::endl;
@@ -98,7 +98,7 @@ void printTopXPages(
     const std::unordered_map<uint32_t, std::string>& pages,
     std::unordered_map<uint32_t,
         std::pair<uint16_t,
-            std::map<uint32_t, uint8_t>>>& links,
+            std::unordered_map<uint32_t, uint8_t>>>& links,
     uint8_t num_of_showing_pages)
 {
     auto greater = [](const std::pair<uint16_t, uint32_t>& a, const std::pair<uint16_t, uint32_t>& b) { return a.first > b.first; };
