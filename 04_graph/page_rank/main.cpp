@@ -31,37 +31,49 @@ void readFile(const std::string&& file_name,
 int main()
 {
     std::unordered_map<uint32_t, std::string> pages;
-    std::unordered_map<uint32_t, std::pair<uint16_t, std::unordered_map<uint32_t, uint8_t>>> links;
+    std::unordered_map<uint32_t, std::pair<uint32_t, std::unordered_map<uint32_t, uint16_t>>> links;
 
-    auto readFile5 = [&pages]() { readFile("../testcase/pages_small.txt",
+    auto readFile5 = [&pages]() { readFile("../testcase/pages.txt",
                                       [&pages](auto arg1, auto arg2) { pages[(uint32_t)(std::stoi(arg1))] = arg2; }); };
 
-    auto process_links_data = [&links](auto arg1, auto arg2) {
-        m.lock();
+    auto readFile0 = [&links]() { readFile("../testcase/links.txt",
+                                      [&links](auto arg1, auto arg2) {
         links[(uint32_t)(std::stoi(arg1))].first = 50;
-        links[(uint32_t)(std::stoi(arg1))].second[(uint32_t)(std::stoi(arg2))] = 0; 
+        links[(uint32_t)(std::stoi(arg1))].second[(uint32_t)(std::stoi(arg2))] = 0; }); };
+
+    /*auto process_links_data = [&links](auto arg1, auto arg2) {
+        uint32_t v_arg1 = (uint32_t)(std::stoi(arg1));
+        uint32_t v_arg2 = (uint32_t)(std::stoi(arg2));
+        m.lock();
+        links[v_arg1].first = 50;
+        links[v_arg1].second[v_arg2] = 0; 
         m.unlock(); };
 
-    auto readFile0 = [&]() { readFile("../testcase/links_small_div00.txt", process_links_data); };
-    auto readFile1 = [&]() { readFile("../testcase/links_small_div01.txt", process_links_data); };
-    auto readFile2 = [&]() { readFile("../testcase/links_small_div02.txt", process_links_data); };
-    auto readFile3 = [&]() { readFile("../testcase/links_small_div03.txt", process_links_data); };
-    auto readFile4 = [&]() { readFile("../testcase/links_small_div04.txt", process_links_data); };
+    auto readFile0 = [&]() { readFile("../testcase/links_div00.txt", process_links_data); };
+    auto readFile1 = [&]() { readFile("../testcase/links_div01.txt", process_links_data); };
+    auto readFile2 = [&]() { readFile("../testcase/links_div02.txt", process_links_data); };
+    auto readFile3 = [&]() { readFile("../testcase/links_div03.txt", process_links_data); };
+    auto readFile4 = [&]() { readFile("../testcase/links_div04.txt", process_links_data); };*/
 
     std::thread th(readFile5);
     std::thread th0(readFile0);
-    std::thread th1(readFile1);
-    std::thread th2(readFile2);
-    std::thread th3(readFile3);
-    std::thread th4(readFile4);
+    /*std::thread th1(readFile1);
+    std::thread th2(readFile2);*/
+    //std::thread th3(readFile3);
+    //std::thread th4(readFile4);
 
     th.join();
     std::cerr << "th end" << std::endl;
     th0.join();
-    th1.join();
+    std::cerr << "th0 end" << std::endl;
+    /*th1.join();
+    std::cerr << "th1 end" << std::endl;
     th2.join();
-    th3.join();
-    th4.join();
+    std::cerr << "th2 end" << std::endl;*/
+    //th3.join();
+    //std::cerr << "th3 end" << std::endl;
+    //th4.join();
+    //std::cerr << "th4 end" << std::endl;
 
     updatePageRank(links, 5);
 
