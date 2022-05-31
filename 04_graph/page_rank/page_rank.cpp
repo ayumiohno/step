@@ -10,7 +10,7 @@
 
 void distributePointsToEdges(
     const std::vector<std::unordered_map<std::string,
-        std::pair<int,
+        std::pair<uint16_t,
             std::map<std::string, uint8_t>>>::iterator>& list,
     const uint8_t& random_rate,
     const uint8_t&& th_id)
@@ -21,7 +21,7 @@ void distributePointsToEdges(
     for (std::size_t i = start; i < end; ++i) {
         uint8_t num_of_edges = list.at(i)->second.second.size();
         if (num_of_edges != 0) {
-            int& point_of_node = list.at(i)->second.first;
+            uint16_t& point_of_node = list.at(i)->second.first;
             uint8_t point_of_edges = (uint8_t)(point_of_node * (random_rate - 1) / random_rate / num_of_edges);
             for (auto& edge : list.at(i)->second.second) {
                 edge.second = point_of_edges;
@@ -33,7 +33,7 @@ void distributePointsToEdges(
 
 void getPointsFromEdges(
     std::unordered_map<std::string,
-        std::pair<int,
+        std::pair<uint16_t,
             std::map<std::string, uint8_t>>>& links,
     const uint8_t& random_rate)
 {
@@ -47,13 +47,13 @@ void getPointsFromEdges(
 
 void updatePageRank(
     std::unordered_map<std::string,
-        std::pair<int,
+        std::pair<uint16_t,
             std::map<std::string, uint8_t>>>& links,
     const std::size_t&& loop_times,
     const uint8_t&& random_rate)
 {
     std::vector<std::unordered_map<std::string,
-        std::pair<int,
+        std::pair<uint16_t,
             std::map<std::string, uint8_t>>>::iterator>
         list;
 
@@ -86,7 +86,7 @@ void updatePageRank(
 void printAllRank(
     const std::unordered_map<std::string, std::string>& pages,
     std::unordered_map<std::string,
-        std::pair<int,
+        std::pair<uint16_t,
             std::map<std::string, uint8_t>>>& links)
 {
     for (const auto& link : links) {
@@ -97,20 +97,20 @@ void printAllRank(
 void printTopXPages(
     const std::unordered_map<std::string, std::string>& pages,
     std::unordered_map<std::string,
-        std::pair<int,
+        std::pair<uint16_t,
             std::map<std::string, uint8_t>>>& links,
-    int num_of_showing_pages)
+    uint8_t num_of_showing_pages)
 {
-    auto greater = [](const std::pair<int, std::string>& a, const std::pair<int, std::string>& b) { return a.first > b.first; };
-    std::priority_queue<std::pair<int, std::string>, std::vector<std::pair<int, std::string>>, decltype(greater)> top_x_list;
+    auto greater = [](const std::pair<uint16_t, std::string>& a, const std::pair<uint16_t, std::string>& b) { return a.first > b.first; };
+    std::priority_queue<std::pair<uint16_t, std::string>, std::vector<std::pair<uint16_t, std::string>>, decltype(greater)> top_x_list;
 
-    int count = 0;
+    uint8_t count = 0;
     for (const auto& link : links) {
-        if (count < 10) {
+        if (count < num_of_showing_pages) {
             top_x_list.push({link.second.first, link.first});
             ++count;
         } else {
-            int point = link.second.first;
+            uint16_t point = link.second.first;
             if (point > top_x_list.top().first) {
                 top_x_list.pop();
                 top_x_list.push({point, link.first});

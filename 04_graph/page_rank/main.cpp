@@ -28,11 +28,11 @@ void readFile(const std::string&& file_name,
 int main()
 {
     std::unordered_map<std::string, std::string> pages;
-    std::unordered_map<std::string, std::pair<int, std::map<std::string, uint8_t>>> links;
+    std::unordered_map<std::string, std::pair<uint16_t, std::map<std::string, uint8_t>>> links;
 
-    auto readFile1 = [&pages]() { readFile("../testcase/pages.txt",
+    auto readFile1 = [&pages]() { readFile("../testcase/pages_small.txt",
                                       [&pages](auto arg1, auto arg2) { pages[arg1] = arg2; }); };
-    auto readFile2 = [&links]() { readFile("../testcase/links.txt",
+    auto readFile2 = [&links]() { readFile("../testcase/links_small.txt",
                                       [&links](auto arg1, auto arg2) {
         links[arg1].first = 50;
         links[arg1].second[arg2] = 0; }); };
