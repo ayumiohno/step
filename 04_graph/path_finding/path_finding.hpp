@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+/*valueがなかったときの例外処理用*/
 class NoSuchValueException
 {
 public:

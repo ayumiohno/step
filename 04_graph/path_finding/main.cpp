@@ -8,7 +8,7 @@
 #include <unordered_set>
 
 void readFile(const std::string&& file_name,
-    const std::function<void(std::string, std::string)>& process_data)
+    const std::function<void(std::string, std::string)>&& process_data)
 {
     std::ifstream file(file_name);
     std::string data;
@@ -25,6 +25,7 @@ int main()
 {
     std::unordered_map<uint32_t, std::string> pages;
     std::unordered_map<uint32_t, std::unordered_set<uint32_t>> links;
+
     readFile("../testcase/pages.txt",
         [&pages](auto arg1, auto arg2) { pages[(uint32_t)(std::stoi(arg1))] = arg2; });
     readFile("../testcase/links.txt",
