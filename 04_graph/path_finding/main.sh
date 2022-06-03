@@ -2,7 +2,7 @@
 if [ -e result.txt ]; then
 	rm result.txt
 fi
-g++ main.cpp path_finding.cpp -o a.out
+g++ -O2 main.cpp path_finding.cpp -o a.out
 if [ $? != 0 ]; then
 	echo "failed to compile." >&2
 	exit 1
