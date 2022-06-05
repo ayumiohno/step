@@ -12,7 +12,7 @@ int main()
 {
     std::vector<Point> points;
     {
-        auto file_name = "../google-step-tsp/input_6.csv";
+        auto file_name = "../google-step-tsp/input_4.csv";
         std::ifstream file(file_name);
         std::string data;
         while (std::getline(file, data)) {
@@ -20,10 +20,10 @@ int main()
             auto x = data.substr(0, index);
             auto y = data.substr(index + 1, data.size() - x.size() - 1);
             try {
-                std::cerr << x << " " << std::stold(x) << " " << y << " " << std::stold(y) << std::endl;
+                //std::cerr << x << " " << std::stold(x) << " " << y << " " << std::stold(y) << std::endl;
                 points.push_back(Point{(double)(std::stold(x)), (double)(std::stold(y))});
             } catch (const std::invalid_argument& e) {
-                std::cout << e.what() << std::endl;
+                //std::cout << e.what() << std::endl;
             }
         }
         file.close();
@@ -40,7 +40,7 @@ int main()
     std::default_random_engine eng(rd());
     std::uniform_int_distribution<int> distr(0, num_of_dots - 1);
 
-    for (int i = 0; i < 1000000; ++i) {
+    for (int i = 0; i < 100000000; ++i) {
         auto a = distr(eng);
         auto b = distr(eng);
         if (a == b || std::min(a, b) == 0) {

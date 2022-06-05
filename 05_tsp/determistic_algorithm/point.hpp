@@ -7,7 +7,6 @@ class Point
 public:
     Point() {}
     Point(double x, double y) : x(x), y(y) {}
-
     ~Point() {}
 
     Point operator-(const Point& point) const
