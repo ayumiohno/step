@@ -1,6 +1,7 @@
 #!/bin/bash
-if [ -e file.out ]; then
-	rm file.out
+read -p "Press file number : " file_num
+if [ -e output_$file_num.csv ]; then
+	rm output_$file_num.csv
 fi
 g++ -O2 main.cpp tsp.cpp -o a.out
 if [ $? != 0 ]; then
@@ -9,6 +10,8 @@ if [ $? != 0 ]; then
 fi
 for i in `seq 1 10`
 do
-./a.out $i
-done >>file.out
-cat file.out | awk 'BEGIN{m=1000000} {if($1 != "" && m>$1) m=$1} END{print m}'
+./a.out <<EOS
+$file_num
+EOS
+done >>output_$file_num.csv
+cat output_$file_num.csv | awk 'BEGIN{m=1000000} {if($1 != "" && m>$1) m=$1} END{print m}'

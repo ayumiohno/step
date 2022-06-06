@@ -1,67 +1,70 @@
 #include "point.hpp"
 #include "tsp.hpp"
 
-void updateTable(const std::vector<int>& passing_points, const int& end_id, const std::vector<Point>& points, Table& table_before, Table& table_new)
+/* passing_points : 通過点のidのvector, end_id : 最終点のid
+   points : Pointsクラスのvector
+   dp_memo : 一つ前に更新したのDpMemo, dp_memo_new : 今回更新しようとしているdp_memo*/
+void updateDpMemo(const std::vector<int>& passing_points,
+    const int& end_id, const std::vector<Point>& points,
+    DpMemo& dp_memo, DpMemo& dp_memo_new)
 {
     double min_length = 1 << 30;
-    /*std::cerr << "passing_points: ";
-    for (auto p : passing_points) {
-        //std::cerr << p << " ";
-    }
-    std::cerr << "end_id: " << end_id << std::endl;*/
+    /*最終点の一つ前を通過点の中で動かしていく*/
     for (int i = 0; i < passing_points.size(); ++i) {
         auto v = passing_points;
         v.erase(v.begin() + i);
-        double length = table_before.getMinDistance(passing_points.at(i), v)
+        /*length = 始点~最終点の一つ前の距離(DpMemoを参照) + 最終点の一つ前~最終点の距離(直線)*/
+        double length = dp_memo.getMinDistance(passing_points.at(i), v)
                         + (points.at(passing_points.at(i)) - points.at(end_id)).getNolm();
         min_length = std::min(min_length, length);
     }
-    table_new.pushMinDistance(end_id, passing_points, min_length);  //length passing_points
+    dp_memo_new.pushMinDistance(end_id, passing_points, min_length);
 }
 
-void getDotIdsLoop(int starting_id,
-    const std::vector<int>& usable_ids,
-    std::vector<int> passing_points,
-    const int& using_num_of_dots,
-    const int& end_id, const std::vector<Point>& points,
-    Table& table_before, Table& table_new)
+/* next_id : 次に通過点に挿入する点のid */
+void setPassingPointsLoop(int next_id, std::vector<int> passing_points,
+    const int& using_num_of_dots, const int& end_id,
+    const std::vector<Point>& points,
+    DpMemo& dp_memo, DpMemo& dp_memo_new)
 {
-    passing_points.push_back(starting_id);
-    if (passing_points.size() == using_num_of_dots) {
-        updateTable(passing_points, end_id, points, table_before, table_new);
+    passing_points.push_back(next_id);
+    if (passing_points.size() == using_num_of_dots) {  //通過点追加完了
+        updateDpMemo(passing_points, end_id, points, dp_memo, dp_memo_new);
         return;
     }
-    //auto i_limit = usable_ids.size() - (using_num_of_dots - passing_points.size());
-    for (int i = starting_id + 1; i < points.size(); ++i) {
+    for (int i = next_id + 1; i < points.size(); ++i) {  //最終点以外で通過点を入れていく
         if (i == end_id) {
             continue;
         }
-        getDotIdsLoop(i, usable_ids, passing_points, using_num_of_dots, end_id, points, table_before, table_new);
+        setPassingPointsLoop(i, passing_points, using_num_of_dots, end_id, points, dp_memo, dp_memo_new);
     }
 }
 
-void increaseNumOfDot(Table& table_before, const std::vector<int>& usable_ids, int& using_num_of_dots, const std::vector<Point>& points)
+/* using_num_of_dots : 今回通過点に入れる点の数 */
+void increaseNumOfDot(DpMemo& dp_memo, int& using_num_of_dots, const std::vector<Point>& points)
 {
     std::cerr << "increase Num: " << using_num_of_dots << std::endl;
-    Table table_new{points.size()};
+    DpMemo dp_memo_new{(int)points.size()};
+    /*最終点を動かしていく*/
     for (int end_id = 1; end_id < points.size(); ++end_id) {
+        /*始点0の次の点を動かしていく*/
         for (int starting_id = 1; starting_id < points.size(); ++starting_id) {
             if (starting_id == end_id) {
                 continue;
             }
-            getDotIdsLoop(starting_id, usable_ids, {}, using_num_of_dots, end_id, points, table_before, table_new);
+            setPassingPointsLoop(starting_id, {}, using_num_of_dots, end_id, points, dp_memo, dp_memo_new);
         }
     }
-    table_before = table_new;
+    dp_memo = std::move(dp_memo_new);
 }
 
-void finalTable(Table& table_before, const std::vector<int>& usable_ids, const std::vector<Point>& points)
+void finalDpMemo(DpMemo& dp_memo, const std::vector<Point>& points)
 {
-    std::cerr << "increase Num: "
-              << "final" << std::endl;
-    Table table_new{1};
+    std::cerr << "increase Num: final" << std::endl;
+    DpMemo dp_memo_new{1};  //end_idは一つだけなのでsizeは1
+    /*始点0の次の点を動かしていく*/
     for (int starting_id = 1; starting_id < points.size(); ++starting_id) {
-        getDotIdsLoop(starting_id, usable_ids, {}, points.size() - 1, 0, points, table_before, table_new);
+        setPassingPointsLoop(starting_id, {}, points.size() - 1, 0, points, dp_memo, dp_memo_new);
     }
-    table_before = table_new;
+    dp_memo = std::move(dp_memo_new);
 }
