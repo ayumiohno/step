@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <iostream>
 #include <map>
-#include <queue>
 #include <string>
 #include <vector>
 
@@ -20,7 +19,7 @@ public:
         this->min_distances.at(end_id)[passing_points] = min_distance;
     }
 
-    double getMinDistance(int end_id, std::vector<int> passing_points)
+    double getMinDistance(int end_id, std::vector<int> passing_points) const
     {
         return this->min_distances.at(end_id).at(passing_points);
     }
