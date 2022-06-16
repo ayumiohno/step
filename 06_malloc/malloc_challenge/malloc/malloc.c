@@ -31,14 +31,14 @@ typedef struct my_metadata_t {
 } my_metadata_t;
 
 typedef struct my_heap_t {
-    my_metadata_t* free_head;
-    my_metadata_t dummy;
+    my_metadata_t* free_head[4];
+    my_metadata_t dummy[4];
 } my_heap_t;
 
 //
 // Static variables (DO NOT ADD ANOTHER STATIC VARIABLES!)
 //
-my_heap_t my_heap[4];
+my_heap_t my_heap;
 
 //
 // Helper functions (feel free to add/remove/edit!)
@@ -50,7 +50,7 @@ size_t getHeapIndex(size_t size)
         return 0;
     } else if (size < 128) {
         return 1;
-    } else if (size < 2000) {
+    } else if (size < 2048) {
         return 2;
     } else {
         return 3;
@@ -61,8 +61,8 @@ void my_add_to_free_list(my_metadata_t* metadata)
 {
     assert(!metadata->next);
     size_t heap_index = getHeapIndex(metadata->size);
-    metadata->next = my_heap[heap_index].free_head;
-    my_heap[heap_index].free_head = metadata;
+    metadata->next = my_heap.free_head[heap_index];
+    my_heap.free_head[heap_index] = metadata;
 }
 
 void my_remove_from_free_list(my_metadata_t* metadata, my_metadata_t* prev)
@@ -71,7 +71,7 @@ void my_remove_from_free_list(my_metadata_t* metadata, my_metadata_t* prev)
     if (prev) {
         prev->next = metadata->next;
     } else {
-        my_heap[heap_index].free_head = metadata->next;
+        my_heap.free_head[heap_index] = metadata->next;
     }
     metadata->next = NULL;
 }
@@ -81,7 +81,7 @@ void my_remove_from_free_list_with_index(my_metadata_t* metadata, my_metadata_t*
     if (prev) {
         prev->next = metadata->next;
     } else {
-        my_heap[heap_index].free_head = metadata->next;
+        my_heap.free_head[heap_index] = metadata->next;
     }
     metadata->next = NULL;
 }
@@ -94,9 +94,9 @@ void my_remove_from_free_list_with_index(my_metadata_t* metadata, my_metadata_t*
 void my_initialize()
 {
     for (int i = 0; i < 4; ++i) {
-        my_heap[i].free_head = &my_heap[i].dummy;
-        my_heap[i].dummy.size = 0;
-        my_heap[i].dummy.next = NULL;
+        my_heap.free_head[i] = &my_heap.dummy[i];
+        my_heap.dummy[i].size = 0;
+        my_heap.dummy[i].next = NULL;
     }
 }
 
@@ -117,7 +117,7 @@ void* my_malloc(size_t size)
     // TODO: Update this logic to Best-fit!
     //size_t searching_count = 0;
     for (size_t i = heap_index; i < 4 && !best_fit; ++i) {
-        my_metadata_t* metadata = my_heap[i].free_head;
+        my_metadata_t* metadata = my_heap.free_head[i];
         my_metadata_t* prev = NULL;
         while (metadata) {
             if ((!best_fit || metadata->size < best_fit->size) && metadata->size >= size) {
