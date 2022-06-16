@@ -52,8 +52,10 @@ void my_add_to_free_list(my_metadata_t *metadata) {
 
 void my_remove_from_free_list(my_metadata_t *metadata, my_metadata_t *prev) {
   if (prev) {
+    printf("update prev\n");
     prev->next = metadata->next;
   } else {
+    printf("new_free_data\n");
     my_heap.free_head = metadata->next;
   }
   metadata->next = NULL;
@@ -86,7 +88,11 @@ void *my_malloc(size_t size) {
   // now, metadata points to the first free slot
   // and prev is the previous entry.
 
+  printf("%p\n",metadata);
+  printf("%p\n", prev);
+
   if (!metadata) {
+    printf("called new memory rigion\n");
     // There was no free slot available. We need to request a new memory region
     // from the system by calling mmap_from_system().
     //
@@ -110,6 +116,7 @@ void *my_malloc(size_t size) {
   // ... | metadata | object | ...
   //     ^          ^
   //     metadata   ptr
+  printf("called best fit\n");
   void *ptr = metadata + 1;
   size_t remaining_size = metadata->size - size;
   metadata->size = size;
@@ -117,6 +124,7 @@ void *my_malloc(size_t size) {
   my_remove_from_free_list(metadata, prev);
 
   if (remaining_size > sizeof(my_metadata_t)) {
+    printf("create new metadata for remaining free slot\n");
     // Create a new metadata for the remaining free slot.
     //
     // ... | metadata | object | metadata | free slot | ...

@@ -52,8 +52,10 @@ void my_add_to_free_list(my_metadata_t *metadata) {
 
 void my_remove_from_free_list(my_metadata_t *metadata, my_metadata_t *prev) {
   if (prev) {
+    //printf("update prev\n");
     prev->next = metadata->next;
   } else {
+    //printf("new_free_data\n");
     my_heap.free_head = metadata->next;
   }
   metadata->next = NULL;
@@ -78,20 +80,26 @@ void *my_malloc(size_t size) {
   my_metadata_t *metadata = my_heap.free_head;
   my_metadata_t *prev = NULL;
   my_metadata_t *best_fit = NULL;
+  my_metadata_t *best_fit_prev = NULL;
   // First-fit: Find the first free slot the object fits.
   // TODO: Update this logic to Best-fit!
-  while (metadata) {
-    if((!best_fit || metadata->size < best_fit->size) && metadata->size > size){
+  //size_t searching_count = 0;
+  while(metadata){
+    if((!best_fit || metadata->size < best_fit->size) && metadata->size >= size){
         best_fit = metadata;
+        best_fit_prev = prev;
     }
     prev = metadata;
     metadata = metadata->next;
-    printf("running");
   }
   // now, metadata points to the first free slot
   // and prev is the previous entry.
 
+  //printf("%p\n",best_fit);
+  //printf("%p\n",best_fit_prev);
+
   if (!best_fit) {
+    //printf("called new memory rigion\n");
     // There was no free slot available. We need to request a new memory region
     // from the system by calling mmap_from_system().
     //
@@ -115,13 +123,15 @@ void *my_malloc(size_t size) {
   // ... | metadata | object | ...
   //     ^          ^
   //     metadata   ptr
-  void *ptr = metadata + 1;
-  size_t remaining_size = metadata->size - size;
-  metadata->size = size;
+  //printf("called best fit\n");
+  void *ptr = best_fit + 1;
+  size_t remaining_size = best_fit->size - size;
+  best_fit->size = size;
   // Remove the free slot from the free list.
-  my_remove_from_free_list(metadata, prev);
+  my_remove_from_free_list(best_fit, best_fit_prev);
 
   if (remaining_size > sizeof(my_metadata_t)) {
+    //printf("create new metadata for remaining free slot\n");
     // Create a new metadata for the remaining free slot.
     //
     // ... | metadata | object | metadata | free slot | ...

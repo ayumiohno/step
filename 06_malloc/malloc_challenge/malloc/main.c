@@ -321,15 +321,11 @@ void run_challenges() {
                 simple_finalize);
 
   // Challenge 1:
-  printf("ch1 simple begin");
   run_challenge("trace1_simple.txt", 128, 128, simple_initialize, simple_malloc,
                 simple_free, simple_finalize);
-  printf("ch1 simple");
   simple_stats = stats;
-  printf("ch1 my begin");
   run_challenge("trace1_my.txt", 128, 128, my_initialize, my_malloc, my_free,
                 my_finalize);
-  printf("ch1 my");
   my_stats = stats;
   print_stats(1, simple_stats, my_stats);
 
