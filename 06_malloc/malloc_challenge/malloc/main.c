@@ -163,7 +163,7 @@ void run_challenge(const char* trace_file_name, size_t min_size,
     malloc_func_t malloc_func, free_func_t free_func,
     finalize_func_t finalize_func)
 {
-    printf("run challent \n");
+    printf("run challenge \n");
     trace_fp = NULL;
 #ifdef ENABLE_MALLOC_TRACE
     if (trace_file_name) {
@@ -193,7 +193,10 @@ void run_challenge(const char* trace_file_name, size_t min_size,
     stats.allocated_size = stats.freed_size = 0;
     stats.begin_time = get_time();
     for (int cycle = 0; cycle < cycles; cycle++) {
+            //printf("%i/n", cycle);
         for (int epoch = 0; epoch < epochs_per_cycle; epoch++) {
+            //printf("%i/n", epoch);
+            //printf("push objects\n");
             size_t allocated = 0;
             size_t freed = 0;
 
@@ -231,6 +234,8 @@ void run_challenge(const char* trace_file_name, size_t min_size,
 
             // Free objects that are expected to be freed in this epoch.
             vector_t* vector = objects[epoch];
+            //printf("free objects\n");
+            //printf("%ld/n", vector_size(vector));
             for (size_t i = 0; i < vector_size(vector); i++) {
                 object_t object = vector_at(vector, i);
                 stats.freed_size += object.size;
