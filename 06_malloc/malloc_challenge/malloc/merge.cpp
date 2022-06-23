@@ -29,59 +29,14 @@ typedef struct my_metadata_t {
     size_t size;
     struct my_metadata_t* left;
     struct my_metadata_t* right;
-    //bool is_sequence;
+    struct my_metadata_t* before;
+    struct my_metadata_t* after;
+    bool is_free;
 } my_metadata_t;
 
 typedef struct my_heap_t {
     my_metadata_t* free_head;
 } my_heap_t;
-
-void insertNode(my_metadata_t* metadata, my_metadata_t* target)
-{
-    //my_metadata_t* prev = NULL;
-    assert(metadata);
-    if(!target){
-        return;
-    }
-    //target->is_sequence = false;
-    while(true){
-        /*if(target->size == metadata->size && metadata->is_sequence){
-            assert(!target->left && !target->right);
-            if(prev->left == metadata){
-                prev->left = target;
-            }else if(prev->right == metadata){
-                prev->right = target;
-            }else{
-                assert(false);
-            }
-            target->is_sequence = true;
-            target->left = metadata->left;
-            target->right = metadata;
-            metadata->left = NULL;
-            return;
-        }*/
-        if (target->size < metadata->size) {
-            if (!metadata->left) {
-                metadata->left = target;
-                //target->is_sequence = true;
-                return;
-            } else {
-                //prev = metadata;
-                metadata = metadata->left;
-            }
-        } else {
-            if (!metadata->right) {
-                metadata->right = target;
-                //target->is_sequence = true;
-                return;
-            } else {
-                //prev = metadata;
-                metadata = metadata->right;
-            }
-        }
-    }
-}
-
 
 //
 // Static variables (DO NOT ADD ANOTHER STATIC VARIABLES!)
@@ -92,22 +47,47 @@ my_heap_t my_heap;
 // Helper functions (feel free to add/remove/edit!)
 //
 
-void my_add_to_free_list(my_metadata_t* metadata)
+
+void my_insertNode(my_metadata_t* metadata, my_metadata_t* target)
 {
     assert(metadata);
-    if(!my_heap.free_head){
-        //printf("new head in my_add_to_free_list \n");
-        my_heap.free_head = metadata;
-    } else {
-        //printf("calling insertNode int my_add_to_free_list \n");
-        insertNode(my_heap.free_head, metadata);
+    my_metadata_t* node = metadata;
+    if (!target) {
+        return;
+    }
+    while (true) {
+        if (target->size < node->size) {
+            if (!node->left) {
+                node->left = target;
+                return;
+            } else {
+                node = node->left;
+            }
+        } else {
+            if (!node->right) {
+                node->right = target;
+                return;
+            } else {
+                node = node->right;
+            }
+        }
     }
 }
 
-void my_remove_from_free_list(my_metadata_t* metadata, my_metadata_t* prev)
+
+void my_add_to_free_list(my_metadata_t* metadata)
 {
     assert(metadata);
-    //printf("my_remove_from_free_list \n");
+    if (!my_heap.free_head) {
+        my_heap.free_head = metadata;
+    } else {
+        my_insertNode(my_heap.free_head, metadata);
+    }
+}
+
+void my_remove_from_free_list_with_prev(my_metadata_t* metadata, my_metadata_t* prev)
+{
+  assert(metadata);
     if (prev) {
         if(metadata->right){
             if (metadata->size < prev->size) {
@@ -115,8 +95,7 @@ void my_remove_from_free_list(my_metadata_t* metadata, my_metadata_t* prev)
             } else {
                 prev->right = metadata->right;
             }
-            //printf("calling insertNode int my_remove_from_free_list with prev \n");
-            insertNode(metadata->right, metadata->left);
+            my_insertNode(metadata->right, metadata->left);
         } else {
             if (metadata->size < prev->size) {
                 prev->left = metadata->left;
@@ -127,12 +106,86 @@ void my_remove_from_free_list(my_metadata_t* metadata, my_metadata_t* prev)
     } else {
         if(metadata->right){
             my_heap.free_head = metadata->right;
-            //printf("calling insertNode int my_remove_from_free_list \n");
-            insertNode(metadata->right, metadata->left);
+            my_insertNode(metadata->right, metadata->left);
         }else{
             my_heap.free_head = metadata->left;
         }
     }
+}
+
+bool my_remove_from_free_list(my_metadata_t* metadata){
+  my_metadata_t* node = my_heap.free_head;
+  my_metadata_t* prev = NULL;
+  assert(metadata);
+  while(node){
+    if(metadata == node){
+      my_remove_from_free_list_with_prev(metadata, prev);
+      return true;
+    }else if(metadata->size < node->size){
+      prev = node;
+      node = node->left;
+    }else{
+      prev = node;
+      node = node->right;
+    }
+  }
+  assert(false);
+  return false;
+}
+
+void my_fill_gap(my_metadata_t* metadata){
+  if(!metadata->after){
+    return;
+  }
+  void* ptr_at_end = (metadata + 1);
+  void* ptr_in_front = (metadata->after - 1);
+  metadata->size += ((size_t)ptr_in_front + metadata->size - 1 - (size_t)ptr_at_end);
+}
+
+void my_merge_left(my_metadata_t* metadata)
+{
+  if(!metadata->after || !metadata->after->is_free){
+    return;
+  }
+
+  my_remove_from_free_list(metadata->after);
+  
+  metadata->size += (sizeof(my_metadata_t) + metadata->after->size);
+  
+  metadata->after = metadata->after->after;
+  if(metadata->after){
+    metadata->after->before = metadata;
+  }
+
+}
+
+void my_merge_right(my_metadata_t* metadata){
+
+  if(metadata->before && metadata->before->is_free){
+
+  my_remove_from_free_list(metadata->before);
+
+  metadata = metadata->before;
+
+  metadata->left = NULL;
+  metadata->right = NULL;
+
+  metadata->size += (sizeof(my_metadata_t) + metadata->after->size);
+  
+  metadata->after = metadata->after->after;
+  if(metadata->after){
+    metadata->after->before = metadata;
+  }
+  }
+  my_add_to_free_list(metadata);
+  /*metadata->before->size += (sizeof(my_metadata_t) + metadata->size);
+  
+  metadata->before->after = metadata->after;
+  if(metadata->after){
+    metadata->after->before = metadata->before;
+  }
+
+  metadata = metadata->before;*/
 }
 
 //
@@ -155,9 +208,7 @@ void* my_malloc(size_t size)
     my_metadata_t* prev = NULL;
     my_metadata_t* best_fit = NULL;
     my_metadata_t* best_fit_prev = NULL;
-    // First-fit: Find the first free slot the object fits.
-    // TODO: Update this logic to Best-fit!
-    //size_t searching_count = 0;
+
     while (metadata) {
         if (metadata->size == size) {
             best_fit = metadata;
@@ -193,12 +244,15 @@ void* my_malloc(size_t size)
         size_t buffer_size = 4096;
         my_metadata_t* best_fit = (my_metadata_t*)mmap_from_system(buffer_size);
         best_fit->size = buffer_size - sizeof(my_metadata_t);
-        //TODO
+
         best_fit->left = NULL;
         best_fit->right = NULL;
 
+        best_fit->before = NULL;
+        best_fit->after = NULL;
+        
+        best_fit->is_free = true;
         // Add the memory region to the free list.
-        //printf("%ld\n", best_fit->size);
         my_add_to_free_list(best_fit);
         // Now, try my_malloc() again. This should succeed.
         return my_malloc(size);
@@ -212,9 +266,9 @@ void* my_malloc(size_t size)
     //printf("called best fit\n");
     void* ptr = best_fit + 1;
     size_t remaining_size = best_fit->size - size;
-    best_fit->size = size;
+    best_fit->is_free = false;
+    my_remove_from_free_list_with_prev(best_fit, best_fit_prev);
     // Remove the free slot from the free list.
-    my_remove_from_free_list(best_fit, best_fit_prev);
 
     if (remaining_size > sizeof(my_metadata_t)) {
         //printf("create new metadata for remaining free slot\n");
@@ -225,12 +279,24 @@ void* my_malloc(size_t size)
         //     metadata   ptr      new_metadata
         //                 <------><---------------------->
         //                   size       remaining size
+        best_fit->size = size;
         my_metadata_t* new_metadata = (my_metadata_t*)((char*)ptr + size);
         new_metadata->size = remaining_size - sizeof(my_metadata_t);
         new_metadata->left = NULL;
         new_metadata->right = NULL;
+        new_metadata->is_free = true;
+
         // Add the remaining free slot to the free list.
         my_add_to_free_list(new_metadata);
+        
+        /*before after*/
+        assert(best_fit);
+        new_metadata->after = best_fit->after;
+        new_metadata->before = best_fit;
+        if(best_fit->after){
+          best_fit->after->before = new_metadata;
+        }
+        best_fit->after = new_metadata;
     }
     return ptr;
 }
@@ -248,8 +314,11 @@ void my_free(void* ptr)
     //assert(!metadata->left && !metadata->right);
     metadata->right = NULL;
     metadata->left = NULL;
+    metadata->is_free = true;
     // Add the free slot to the free list.
-    my_add_to_free_list(metadata);
+    //my_fill_gap(metadata);
+    my_merge_left(metadata);
+    my_merge_right(metadata);
 }
 
 // This is called at the end of each challenge.
