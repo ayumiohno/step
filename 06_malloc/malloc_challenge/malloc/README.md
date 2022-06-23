@@ -50,14 +50,22 @@ sizeの要求向け
 * 挿入もO(1)
 
 ### 使い分け
-* cacheの対象サイズのとき
+* 50回目以降かつcacheの対象サイズのとき
     * cache あるいはcache_poolの在庫がある時:cache
-    * smallあるいはlargeで新たに領域を確保せずに済む場合:binary tree or free list
+    * smallあるいはlargeで新たに領域を確保せずに済む場合:binary tree or linked list
 * sizeが128より大きい場合
     * binary treee
 * sizeが128以下の場合        
     * binary treeに128以下の空き領域がある場合:malloc_large
-    * それ以外:free_list
+    * それ以外:linked list
+### objectをtree, listに戻すときのmetadataの区別
+* このようにmetadataの直後にtype_of_metadataというstructを置いている
+* objectのptrが帰ってきたときは、typeのbool値を読むことで、その前のmetadataがbinary tree用かlinked list用かcache用かの区別をつけられる
+```
+| metadata | type | free slot or object |
+                  ^
+                 ptr
+```
 ## best_score.cの結果
 
 ```
@@ -92,6 +100,23 @@ Please copy & paste the following data in the score sheet!
 7,73,6,48,225,49,131,74,92,73,
 ```
 
+### Challenge1, 2
+* ほとんどでcacheが使われる
+* my_cahche_tはsizeを持たず通常のlinked listより小さいため、スコアが上がった
+* 特にobjectのsizeが小さいChallege 2 ほど差が顕著に表れた
+* cacheではbest fitの探索も不要なため、時間がfirst fit並みになった
+### Challenge 3
+* ほとんどでlinked listが使われ、一部ではcacheも使われる
+* objectのsizeが小さく、metadataのsizeに依存するため、binray treeのみの実装では30だったのが49となった
+* もっともfree listの使用頻度が高いため、時間がかかる
+### Challenge 4
+* binary tree, cacheが使われうるパターン
+* ただ、binary treeのmergeを実装してUtilizationが74になったきり増加しない
+* cache用のpageができる頻度が小さく、ほぼ使われないことが原因?
+### Challenge5
+* binary tree, linked list, cacheが使われうるパターン
+* binary treeのmergeを実装してUtilizationが74になったきり増加しない(むしろ73に減少)
+* linked listとの併用の逆効果に関しては、併用が必要となるような小さいobjectの要求がすくないことと、小さいobjectの要求があっても、binary treeの隙間に入れられる場合が多いことに原因がありそう
 # default desciption
 ## Instruction
 
