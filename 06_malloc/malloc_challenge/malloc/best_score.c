@@ -26,30 +26,30 @@ void munmap_to_system(void* ptr, size_t size);
 // Struct definitions
 //
 
-typedef struct my_is_small_t {
+typedef struct my_type_of_metadata_t {
     bool is_small;
     bool is_cache;
-} my_is_small_t;
+} my_type_of_metadata_t;
 
-typedef struct my_metadata_t {
+typedef struct my_metadata_t {  //binary tree
     size_t size;
-    struct my_metadata_t* left;
-    struct my_metadata_t* right;
-    struct my_metadata_t* before;
-    struct my_metadata_t* after;
+    struct my_metadata_t* left;    //metadata* of smaller size
+    struct my_metadata_t* right;   //metadata* of larger size
+    struct my_metadata_t* before;  //metadata* of previous pointer
+    struct my_metadata_t* after;   //metadata* of next pointer
     bool is_free;
 } my_metadata_t;
 
-typedef struct my_metadata_small_t {
+typedef struct my_metadata_small_t {  //linked list
     size_t size;
     struct my_metadata_small_t* next;
 } my_metadata_small_t;
 
-typedef struct my_cache_t{
+typedef struct my_cache_t {  //cache; size : my_heap_t.average
     struct my_cache_t* next;
 } my_cache_t;
 
-typedef struct my_cache_pool_t{
+typedef struct my_cache_pool_t {  //free region saved for cache
     size_t size;
 } my_cache_pool_t;
 
@@ -58,9 +58,8 @@ typedef struct my_heap_t {
     my_metadata_small_t* free_small_head;
     my_cache_t* cache_head;
     my_cache_pool_t* cache_pool;
-    size_t num_of_data;
-    size_t average;
-    size_t variance;
+    size_t num_of_data;  //50になるまで更新
+    size_t average;      //num_of_dateが50になるまで更新
 } my_heap_t;
 
 
@@ -73,7 +72,12 @@ my_heap_t my_heap;
 // Helper functions (feel free to add/remove/edit!)
 //
 
-void my_insertNode(my_metadata_t* metadata, my_metadata_t* target)
+//
+// Helper functions for binary tree (my_metadata_t)
+//
+
+//targetをmetadataの部分木にleafとして挿入
+void my_insert_node(my_metadata_t* metadata, my_metadata_t* target)
 {
     assert(metadata);
     my_metadata_t* node = metadata;
@@ -99,18 +103,19 @@ void my_insertNode(my_metadata_t* metadata, my_metadata_t* target)
     }
 }
 
-
-void my_add_to_free_list(my_metadata_t* metadata)
+//targetをbinary_treeに挿入
+void my_add_to_binary_tree(my_metadata_t* metadata)
 {
     assert(metadata);
     if (!my_heap.free_head) {
         my_heap.free_head = metadata;
     } else {
-        my_insertNode(my_heap.free_head, metadata);
+        my_insert_node(my_heap.free_head, metadata);
     }
 }
 
-void my_remove_from_free_list_with_prev(my_metadata_t* metadata, my_metadata_t* prev)
+//targetをbinary_treeから除去. prevはtargetのparent
+void my_remove_from_binary_tree_with_prev(my_metadata_t* metadata, my_metadata_t* prev)
 {
     assert(metadata);
     if (prev) {
@@ -120,7 +125,7 @@ void my_remove_from_free_list_with_prev(my_metadata_t* metadata, my_metadata_t* 
             } else {
                 prev->right = metadata->right;
             }
-            my_insertNode(metadata->right, metadata->left);
+            my_insert_node(metadata->right, metadata->left);
         } else {
             if (metadata->size < prev->size) {
                 prev->left = metadata->left;
@@ -131,22 +136,23 @@ void my_remove_from_free_list_with_prev(my_metadata_t* metadata, my_metadata_t* 
     } else {
         if (metadata->right) {
             my_heap.free_head = metadata->right;
-            my_insertNode(metadata->right, metadata->left);
+            my_insert_node(metadata->right, metadata->left);
         } else {
             my_heap.free_head = metadata->left;
         }
     }
 }
 
-bool my_remove_from_free_list(my_metadata_t* metadata)
+//targetをbinary_treeから除去. prevは二部探索で求める.
+void my_remove_from_binary_tree(my_metadata_t* metadata)
 {
     my_metadata_t* node = my_heap.free_head;
     my_metadata_t* prev = NULL;
     assert(metadata);
     while (node) {
         if (metadata == node) {
-            my_remove_from_free_list_with_prev(metadata, prev);
-            return true;
+            my_remove_from_binary_tree_with_prev(metadata, prev);
+            return;
         } else if (metadata->size < node->size) {
             prev = node;
             node = node->left;
@@ -156,55 +162,84 @@ bool my_remove_from_free_list(my_metadata_t* metadata)
         }
     }
     assert(false);
-    return false;
 }
 
-void my_merge_left(my_metadata_t* metadata)
+//右側とmerge
+void my_merge_right(my_metadata_t* metadata)
 {
     if (!metadata->after || !metadata->after->is_free) {
         return;
     }
 
-    my_remove_from_free_list(metadata->after);
+    my_remove_from_binary_tree(metadata->after);
 
-    metadata->size += (sizeof(my_metadata_t) + sizeof(my_is_small_t) + metadata->after->size);
+    metadata->size += (sizeof(my_metadata_t) + sizeof(my_type_of_metadata_t) + metadata->after->size);
 
-    metadata->after = metadata->after->after;
+    my_metadata_t* after = metadata->after->after;
+
+    metadata->after->after = NULL;
+    metadata->after->before = NULL;
+    metadata->after->right = NULL;
+    metadata->after->left = NULL;
+    metadata->after->size = 0;
+    metadata->after->is_free = 0;
+
+    metadata->after = after;
+
     if (metadata->after) {
         metadata->after->before = metadata;
     }
 }
 
-void my_merge_right(my_metadata_t* metadata)
+//左側とmerge
+//mergeできたら左側と一緒にtreeへ挿入
+//mergeできなかったらそのままtreeへ挿入
+void my_merge_left_or_add(my_metadata_t* metadata)
 {
 
     if (metadata->before && metadata->before->is_free) {
 
-        my_remove_from_free_list(metadata->before);
+        my_remove_from_binary_tree(metadata->before);
 
         metadata = metadata->before;
 
         metadata->left = NULL;
         metadata->right = NULL;
 
-        metadata->size += (sizeof(my_metadata_t) + sizeof(my_is_small_t) + metadata->after->size);
+        metadata->size += (sizeof(my_metadata_t) + sizeof(my_type_of_metadata_t) + metadata->after->size);
 
-        metadata->after = metadata->after->after;
+        my_metadata_t* after = metadata->after->after;
+
+        metadata->after->after = NULL;
+        metadata->after->before = NULL;
+        metadata->after->right = NULL;
+        metadata->after->left = NULL;
+        metadata->after->size = 0;
+        metadata->after->is_free = 0;
+
+        metadata->after = after;
         if (metadata->after) {
             metadata->after->before = metadata;
         }
     }
-    my_add_to_free_list(metadata);
+
+    my_add_to_binary_tree(metadata);
 }
 
-void my_add_to_free_list_small(my_metadata_small_t* metadata)
+//
+// Helper functions for free list (my_metadata_small_t)
+//
+
+//linked listの冒頭に挿入
+void my_add_to_free_list(my_metadata_small_t* metadata)
 {
     assert(!metadata->next);
     metadata->next = my_heap.free_small_head;
     my_heap.free_small_head = metadata;
 }
 
-void my_remove_from_free_list_small(my_metadata_small_t* metadata, my_metadata_small_t* prev)
+//linked listから削除
+void my_remove_from_free_list(my_metadata_small_t* metadata, my_metadata_small_t* prev)
 {
     if (prev) {
         prev->next = metadata->next;
@@ -214,49 +249,58 @@ void my_remove_from_free_list_small(my_metadata_small_t* metadata, my_metadata_s
     metadata->next = NULL;
 }
 
-void my_merge_left_small(my_metadata_small_t* metadata)
+//右とmerge
+void my_merge_right_small(my_metadata_small_t* metadata)
 {
     void* ptr_after_metadata = metadata + 1;
-    my_metadata_small_t* next_metadata = (my_metadata_small_t*)((char*)ptr_after_metadata + sizeof(my_is_small_t) + metadata->size);
+    my_metadata_small_t* next_metadata = (my_metadata_small_t*)((char*)ptr_after_metadata + sizeof(my_type_of_metadata_t) + metadata->size);
 
     my_metadata_small_t* node = my_heap.free_small_head;
     my_metadata_small_t* prev = NULL;
-    while(node){
-        if(node == next_metadata){
-            my_remove_from_free_list_small(next_metadata, prev);
-            metadata->size += next_metadata->size + sizeof(my_metadata_small_t) + sizeof(my_is_small_t);
-            //next_metadata->next = NULL;
-            //next_metadata->size = 0;
+    while (node) {
+        if (node == next_metadata) {
+            my_remove_from_free_list(next_metadata, prev);
+            metadata->size += next_metadata->size + sizeof(my_metadata_small_t) + sizeof(my_type_of_metadata_t);
+            next_metadata->next = NULL;
+            next_metadata->size = 0;
             return;
-        }else{
+        } else {
             prev = node;
             node = node->next;
         }
     }
 }
 
-void my_merge_right_or_add_small(my_metadata_small_t* metadata)
+//左側とmerge
+//mergeできたら左側と一緒にtreeへ挿入
+//mergeできなかったらそのままtreeへ挿入
+void my_merge_left_or_add_small(my_metadata_small_t* metadata)
 {
     void* ptr_of_metadata = metadata;
     my_metadata_small_t* node = my_heap.free_small_head;
     my_metadata_small_t* prev = NULL;
-    while(node){
+    while (node) {
         void* ptr_after_node = node + 1;
-        if((char*)ptr_of_metadata == (char*)ptr_after_node + sizeof(my_is_small_t) + node->size){
-            my_remove_from_free_list_small(node, prev);
-            node->size += metadata->size + sizeof(my_metadata_small_t) + sizeof(my_is_small_t);
-            my_add_to_free_list_small(node);
-            //next_metadata->next = NULL;
-            //next_metadata->size = 0;
+        if ((char*)ptr_of_metadata == (char*)ptr_after_node + sizeof(my_type_of_metadata_t) + node->size) {
+            my_remove_from_free_list(node, prev);
+            node->size += metadata->size + sizeof(my_metadata_small_t) + sizeof(my_type_of_metadata_t);
+            my_add_to_free_list(node);
+            metadata->next = NULL;
+            metadata->size = 0;
             return;
-        }else{
+        } else {
             prev = node;
             node = node->next;
         }
     }
-    my_add_to_free_list_small(metadata);
+    my_add_to_free_list(metadata);
 }
 
+//
+// Helper functions for free list (my_metadata_small_t)
+//
+
+//cacheの冒頭に挿入
 void my_add_to_cache(my_cache_t* metadata)
 {
     assert(!metadata->next);
@@ -271,17 +315,13 @@ void my_add_to_cache(my_cache_t* metadata)
 // This is called at the beginning of each challenge.
 void my_initialize()
 {
-    printf("%i\n", (int)sizeof(my_is_small_t));
-    printf("%i\n", (int)sizeof(my_metadata_small_t));
     my_heap.free_head = NULL;
     my_heap.free_small_head = NULL;
     my_heap.cache_head = NULL;
     my_heap.cache_pool = NULL;
     my_heap.num_of_data = 0;
     my_heap.average = 0;
-    my_heap.variance = 16;
 }
-
 
 
 // my_malloc() is called every time an object is allocated.
@@ -293,28 +333,25 @@ void* my_malloc_cache()
 {
     my_cache_t* metadata = my_heap.cache_head;
 
-    if(!metadata){
-        if(my_heap.cache_pool){
+    if (!metadata) {
+        if (my_heap.cache_pool) {  //poolの末尾からmy_cache_tをとってくる
             void* ptr = my_heap.cache_pool + 1;
-            size_t need_size = my_heap.average + sizeof(my_cache_t) + sizeof(my_is_small_t);
+            size_t need_size = my_heap.average + sizeof(my_cache_t) + sizeof(my_type_of_metadata_t);
             metadata = (my_cache_t*)((char*)ptr + my_heap.cache_pool->size - need_size);
-            if(my_heap.cache_pool->size - need_size >= need_size ){
+            if (my_heap.cache_pool->size - need_size >= need_size) {
                 my_heap.cache_pool->size -= need_size;
             } else {
                 my_heap.cache_pool = NULL;
             }
-        } else {
+        } else {  //poolがNULLの時は新たに4096bit取ってくる
             my_cache_pool_t* pool = (my_cache_pool_t*)mmap_from_system(4096);
             pool->size = 4096 - sizeof(my_cache_pool_t);
             my_heap.cache_pool = pool;
             return my_malloc_cache();
         }
-    } else {
+    } else {  //freeなcacheが残っている場合
         my_heap.cache_head = metadata->next;
     }
-
-    // now, metadata points to the first free slot
-    // and prev is the previous entry.
 
 
     // |ptr| is the beginning of the allocated object.
@@ -324,14 +361,11 @@ void* my_malloc_cache()
     //     metadata   ptr
     metadata->next = NULL;
     void* ptr_for_is_small = metadata + 1;
-    my_is_small_t* is_small = (my_is_small_t*)((char*)ptr_for_is_small);
+    my_type_of_metadata_t* is_small = (my_type_of_metadata_t*)((char*)ptr_for_is_small);
 
     is_small->is_cache = true;
 
     void* ptr = is_small + 1;
-
-    //printf("%s\n", "give ptr");
-    //printf("%lu\n", (unsigned long)metadata);
 
     return ptr;
 }
@@ -342,11 +376,9 @@ void* my_malloc_small(size_t size)
     my_metadata_small_t* prev = NULL;
     my_metadata_small_t* best_fit = NULL;
     my_metadata_small_t* best_fit_prev = NULL;
-    // First-fit: Find the first free slot the object fits.
-    // TODO: Update this logic to Best-fit!
-    //size_t searching_count = 0;
+
     while (metadata) {
-        if(metadata->size == size){
+        if (metadata->size == size) {
             best_fit = metadata;
             best_fit_prev = prev;
             break;
@@ -357,9 +389,11 @@ void* my_malloc_small(size_t size)
         prev = metadata;
         metadata = metadata->next;
     }
-    // now, metadata points to the first free slot
-    // and prev is the previous entry.
-
+    if (size <= my_heap.average && size >= my_heap.average - 15) {
+        if (!best_fit) {
+            return my_malloc_cache();
+        }
+    }
 
     if (!best_fit) {
         // There was no free slot available. We need to request a new memory region
@@ -375,14 +409,14 @@ void* my_malloc_small(size_t size)
         my_metadata_small_t* best_fit = (my_metadata_small_t*)mmap_from_system(buffer_size);
 
         void* ptr_for_is_small = best_fit + 1;
-        my_is_small_t* is_small = (my_is_small_t*)((char*)ptr_for_is_small);
+        my_type_of_metadata_t* is_small = (my_type_of_metadata_t*)((char*)ptr_for_is_small);
         is_small->is_small = true;
         is_small->is_cache = false;
 
-        best_fit->size = buffer_size - sizeof(my_metadata_small_t) - sizeof(my_is_small_t);
+        best_fit->size = buffer_size - sizeof(my_metadata_small_t) - sizeof(my_type_of_metadata_t);
         best_fit->next = NULL;
         // Add the memory region to the free list.
-        my_add_to_free_list_small(best_fit);
+        my_add_to_free_list(best_fit);
         // Now, try my_malloc() again. This should succeed.
         return my_malloc_small(size);
     }
@@ -393,15 +427,15 @@ void* my_malloc_small(size_t size)
     //     ^          ^
     //     metadata   ptr
     void* ptr_for_is_small_of_best_fit = best_fit + 1;
-    my_is_small_t* is_small_of_best_fit = (my_is_small_t*)((char*)ptr_for_is_small_of_best_fit);
+    my_type_of_metadata_t* is_small_of_best_fit = (my_type_of_metadata_t*)((char*)ptr_for_is_small_of_best_fit);
 
     void* ptr = is_small_of_best_fit + 1;
 
     size_t remaining_size = best_fit->size - size;
     // Remove the free slot from the free list.
-    my_remove_from_free_list_small(best_fit, best_fit_prev);
+    my_remove_from_free_list(best_fit, best_fit_prev);
 
-    if (remaining_size > sizeof(my_metadata_small_t) + sizeof(my_is_small_t)) {
+    if (remaining_size > sizeof(my_metadata_small_t) + sizeof(my_type_of_metadata_t)) {
         //printf("create new metadata for remaining free slot\n");
         // Create a new metadata for the remaining free slot.
         //
@@ -414,15 +448,15 @@ void* my_malloc_small(size_t size)
         best_fit->size = size;
         my_metadata_small_t* new_metadata = (my_metadata_small_t*)((char*)ptr + size);
 
-        my_is_small_t* is_small = (my_is_small_t*)((char*)ptr + size + sizeof(my_metadata_small_t));
+        my_type_of_metadata_t* is_small = (my_type_of_metadata_t*)((char*)ptr + size + sizeof(my_metadata_small_t));
 
         is_small->is_small = true;
         is_small->is_cache = false;
 
-        new_metadata->size = remaining_size - sizeof(my_metadata_small_t) - sizeof(my_is_small_t);
+        new_metadata->size = remaining_size - sizeof(my_metadata_small_t) - sizeof(my_type_of_metadata_t);
         new_metadata->next = NULL;
         // Add the remaining free slot to the free list.
-        my_add_to_free_list_small(new_metadata);
+        my_add_to_free_list(new_metadata);
     }
     return ptr;
 }
@@ -435,42 +469,30 @@ void* my_malloc_large(size_t size)
     my_metadata_t* best_fit = NULL;
     my_metadata_t* best_fit_prev = NULL;
 
-    if (size > 128) {
-        while (metadata) {
-            if (metadata->size == size) {
-                best_fit = metadata;
-                best_fit_prev = prev;
-                break;
-            }
-            if (metadata->size < size) {
-                prev = metadata;
-                metadata = metadata->right;
-            } else {
-                best_fit = metadata;
-                best_fit_prev = prev;
-                prev = metadata;
-                metadata = metadata->left;
-            }
+    while (metadata) {
+        if (metadata->size == size) {
+            best_fit = metadata;
+            best_fit_prev = prev;
+            break;
         }
-    } else {
-        while (metadata) {
-            if (metadata->size == size) {
-                best_fit = metadata;
-                best_fit_prev = prev;
-                break;
-            }
-            if (metadata->size < size) {
-                prev = metadata;
-                metadata = metadata->right;
-            } else {
-                best_fit = metadata;
-                best_fit_prev = prev;
-                prev = metadata;
-                metadata = metadata->left;
-            }
+        if (metadata->size < size) {
+            prev = metadata;
+            metadata = metadata->right;
+        } else {
+            best_fit = metadata;
+            best_fit_prev = prev;
+            prev = metadata;
+            metadata = metadata->left;
         }
+    }
+    if (size <= 128) {
         if (!best_fit || best_fit->size > 128) {
             return my_malloc_small(size);
+        }
+    }
+    if (size <= my_heap.average && size >= my_heap.average - 15) {
+        if (!best_fit) {
+            return my_malloc_cache();
         }
     }
     // now, metadata points to the first free slot
@@ -489,11 +511,11 @@ void* my_malloc_large(size_t size)
         size_t buffer_size = 4096;
         my_metadata_t* best_fit = (my_metadata_t*)mmap_from_system(buffer_size);
         void* ptr_for_is_small = best_fit + 1;
-        my_is_small_t* is_small = (my_is_small_t*)((char*)ptr_for_is_small);
+        my_type_of_metadata_t* is_small = (my_type_of_metadata_t*)((char*)ptr_for_is_small);
         is_small->is_small = false;
         is_small->is_cache = false;
 
-        best_fit->size = buffer_size - sizeof(my_metadata_t) - sizeof(my_is_small_t);
+        best_fit->size = buffer_size - sizeof(my_metadata_t) - sizeof(my_type_of_metadata_t);
 
         best_fit->left = NULL;
         best_fit->right = NULL;
@@ -503,7 +525,7 @@ void* my_malloc_large(size_t size)
 
         best_fit->is_free = true;
         // Add the memory region to the free list.
-        my_add_to_free_list(best_fit);
+        my_add_to_binary_tree(best_fit);
         // Now, try my_malloc() again. This should succeed.
         return my_malloc_large(size);
     }
@@ -515,15 +537,15 @@ void* my_malloc_large(size_t size)
     //     metadata   ptr
 
     void* ptr_for_is_small_of_best_fit = best_fit + 1;
-    my_is_small_t* is_small_of_best_fit = (my_is_small_t*)((char*)ptr_for_is_small_of_best_fit);
+    my_type_of_metadata_t* is_small_of_best_fit = (my_type_of_metadata_t*)((char*)ptr_for_is_small_of_best_fit);
 
     void* ptr = is_small_of_best_fit + 1;
     size_t remaining_size = best_fit->size - size;
     best_fit->is_free = false;
-    my_remove_from_free_list_with_prev(best_fit, best_fit_prev);
+    my_remove_from_binary_tree_with_prev(best_fit, best_fit_prev);
     // Remove the free slot from the free list.
 
-    if (remaining_size > sizeof(my_metadata_t) + sizeof(my_is_small_t)) {
+    if (remaining_size > sizeof(my_metadata_t) + sizeof(my_type_of_metadata_t)) {
         //printf("create new metadata for remaining free slot\n");
         // Create a new metadata for the remaining free slot.
         //
@@ -536,18 +558,18 @@ void* my_malloc_large(size_t size)
 
         my_metadata_t* new_metadata = (my_metadata_t*)((char*)ptr + size);
 
-        my_is_small_t* is_small = (my_is_small_t*)((char*)ptr + size + sizeof(my_metadata_t));
+        my_type_of_metadata_t* is_small = (my_type_of_metadata_t*)((char*)ptr + size + sizeof(my_metadata_t));
         is_small->is_small = false;
         is_small->is_cache = false;
 
-        new_metadata->size = remaining_size - sizeof(my_metadata_t) - sizeof(my_is_small_t);
+        new_metadata->size = remaining_size - sizeof(my_metadata_t) - sizeof(my_type_of_metadata_t);
 
         new_metadata->left = NULL;
         new_metadata->right = NULL;
         new_metadata->is_free = true;
 
         // Add the remaining free slot to the free list.
-        my_add_to_free_list(new_metadata);
+        my_add_to_binary_tree(new_metadata);
 
         assert(best_fit);
         new_metadata->after = best_fit->after;
@@ -562,15 +584,11 @@ void* my_malloc_large(size_t size)
 
 void* my_malloc(size_t size)
 {
-    if(my_heap.num_of_data < 50){
+    if (my_heap.num_of_data < 50) {  //averageを更新
         my_heap.average = (my_heap.average * my_heap.num_of_data + size) / (++my_heap.num_of_data);
-        
-    } else {
-        if(my_heap.num_of_data < 100){
-            my_heap.variance = (my_heap.variance * (my_heap.num_of_data - 50) + (size - my_heap.average) * (size - my_heap.average)) / (++my_heap.num_of_data - 50);
-        }
-        if(size <= my_heap.average && size >= my_heap.average - my_heap.variance){
-            if(true || my_heap.cache_pool || my_heap.cache_head){
+    } else {  //cacheの利用開始
+        if (size <= my_heap.average && size >= my_heap.average - 15) {
+            if (my_heap.cache_pool || my_heap.cache_head) {
                 return my_malloc_cache();
             }
         }
@@ -589,20 +607,18 @@ void my_free(void* ptr)
     //     metadata   ptr
 
 
-    my_is_small_t* is_small = (my_is_small_t*)ptr - 1;
+    my_type_of_metadata_t* is_small = (my_type_of_metadata_t*)ptr - 1;
     void* ptr_for_metadata = (void*)(is_small);
     assert(is_small);
-    if(is_small->is_cache){
-        my_cache_t* metadata = (my_cache_t*) ptr_for_metadata - 1;
-        //printf("%s\n", "free");
-        //printf("%lu\n", (unsigned long)metadata);
+    if (is_small->is_cache) {
+        my_cache_t* metadata = (my_cache_t*)ptr_for_metadata - 1;
         assert(!metadata->next);
         my_add_to_cache(metadata);
     } else if (is_small->is_small) {
         my_metadata_small_t* metadata = (my_metadata_small_t*)ptr_for_metadata - 1;
         assert(!metadata->next);
-        my_merge_left_small(metadata);
-        my_merge_right_or_add_small(metadata);
+        my_merge_right_small(metadata);
+        my_merge_left_or_add_small(metadata);
     } else {
         my_metadata_t* metadata = (my_metadata_t*)ptr_for_metadata - 1;
         assert(metadata);
@@ -610,9 +626,9 @@ void my_free(void* ptr)
         metadata->right = NULL;
         metadata->left = NULL;
         metadata->is_free = true;
-        // Add the free slot to the free list.
-        my_merge_left(metadata);
+
         my_merge_right(metadata);
+        my_merge_left_or_add(metadata);
     }
 }
 
