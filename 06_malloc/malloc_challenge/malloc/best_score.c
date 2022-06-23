@@ -427,7 +427,7 @@ void* my_malloc_small(size_t size)
         prev = metadata;
         metadata = metadata->next;
     }
-    if (size <= my_heap.average && size >= my_heap.average - 15) {
+    if (my_heap.num_of_data >= 50 && size <= my_heap.average && size >= my_heap.average - 15) {
         if (!best_fit) {
             return my_malloc_cache();
         }
@@ -529,7 +529,7 @@ void* my_malloc_large(size_t size)
             return my_malloc_small(size);
         }
     }
-    if (size <= my_heap.average && size >= my_heap.average - 15) {
+    if (my_heap.num_of_data >= 50 && size <= my_heap.average && size >= my_heap.average - 15) {
         if (!best_fit) {
             return my_malloc_cache();
         }

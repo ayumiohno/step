@@ -64,36 +64,32 @@ sizeの要求向け
 ====================================================
 Challenge #1    |   simple_malloc =>       my_malloc
 --------------- + --------------- => ---------------
-       Time [ms]|              22 =>              27
+       Time [ms]|               8 =>               7
 Utilization [%] |              70 =>              73
-run challenge 
-run challenge 
 ====================================================
 Challenge #2    |   simple_malloc =>       my_malloc
 --------------- + --------------- => ---------------
-       Time [ms]|              20 =>              20
-Utilization [%] |              40 =>              49
+       Time [ms]|               5 =>               6
+Utilization [%] |              40 =>              48
 ====================================================
 Challenge #3    |   simple_malloc =>       my_malloc
 --------------- + --------------- => ---------------
-       Time [ms]|             190 =>             284
+       Time [ms]|             134 =>             225
 Utilization [%] |               7 =>              49
 ====================================================
 Challenge #4    |   simple_malloc =>       my_malloc
 --------------- + --------------- => ---------------
-       Time [ms]|           41181 =>             142
+       Time [ms]|           30960 =>             131
 Utilization [%] |              16 =>              74
-run challenge 
-run challenge 
 ====================================================
 Challenge #5    |   simple_malloc =>       my_malloc
 --------------- + --------------- => ---------------
-       Time [ms]|           29342 =>             122
+       Time [ms]|           21976 =>              92
 Utilization [%] |              15 =>              73
 
 Challenge done!
 Please copy & paste the following data in the score sheet!
-27,73,20,49,284,49,142,74,122,73,
+7,73,6,48,225,49,131,74,92,73,
 ```
 
 # default desciption
