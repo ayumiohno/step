@@ -25,6 +25,76 @@
     * やろうとしていること：空き領域のmergeの改良        
 
 ## best_score.cの機能の説明
+### binary tree
+* best_fitはsizeを参考にbinary treeを下っていくことで、平均計算量O(log n)で見つけられる
+* mergeする相手は、各nodeのbefore, afterを用いれば、計算量O(1)で見つけられる。
+* sample codeを一部変更し、remainig sizeがsizeof(my_metadata_t)より小さい時、metadata->sizeをsizeに変更していない。
+    * これにより、metadataに管理されていない領域がなくなる
+* 挿入は平均O(log n)
+### free list
+* sample codeと同様のlinked list
+* best_fitは全探索O(n)
+* mergeする相手も全探索O(n) 
+* 挿入はO(1)
+* binary_treeよりmetadataのsizeが小さいので、小さい
+sizeの要求向け
+### cache
+* 初めの50回に取った平均~ 平均-15に対して、一律に平均のsizeのmetadataを渡す。
+* sizeが同一なため、各nodeがsizeを管理する必要がなく、nextポインタのみを持てばいいので、structのsizeが小さくなる
+* 4096 biteを確保して、それを分けていく段階で生じるcacheとsizeが異なる領域はcache_poolで管理
+* 使う領域の選び方
+    * cacheの在庫があるときはそれを用いる
+    * poolが余っている場合は、その末端からcacheを生成
+    * poolが余っていない時は、新たにpoolを生成
+    * いずれにせよO(1)
+* 挿入もO(1)
+
+### 使い分け
+* cacheの対象サイズのとき
+    * cache あるいはcache_poolの在庫がある時:cache
+    * smallあるいはlargeで新たに領域を確保せずに済む場合:binary tree or free list
+* sizeが128より大きい場合
+    * binary treee
+* sizeが128以下の場合        
+    * binary treeに128以下の空き領域がある場合:malloc_large
+    * それ以外:free_list
+## best_score.cの結果
+
+```
+====================================================
+Challenge #1    |   simple_malloc =>       my_malloc
+--------------- + --------------- => ---------------
+       Time [ms]|              22 =>              27
+Utilization [%] |              70 =>              73
+run challenge 
+run challenge 
+====================================================
+Challenge #2    |   simple_malloc =>       my_malloc
+--------------- + --------------- => ---------------
+       Time [ms]|              20 =>              20
+Utilization [%] |              40 =>              49
+====================================================
+Challenge #3    |   simple_malloc =>       my_malloc
+--------------- + --------------- => ---------------
+       Time [ms]|             190 =>             284
+Utilization [%] |               7 =>              49
+====================================================
+Challenge #4    |   simple_malloc =>       my_malloc
+--------------- + --------------- => ---------------
+       Time [ms]|           41181 =>             142
+Utilization [%] |              16 =>              74
+run challenge 
+run challenge 
+====================================================
+Challenge #5    |   simple_malloc =>       my_malloc
+--------------- + --------------- => ---------------
+       Time [ms]|           29342 =>             122
+Utilization [%] |              15 =>              73
+
+Challenge done!
+Please copy & paste the following data in the score sheet!
+27,73,20,49,284,49,142,74,122,73,
+```
 
 # default desciption
 ## Instruction
