@@ -20,7 +20,6 @@ public:
         return std::sqrt(this->x * this->x + this->y * this->y);
     }
 
-private:
     double x;
     double y;
 };
