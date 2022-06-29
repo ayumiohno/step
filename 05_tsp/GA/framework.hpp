@@ -1,6 +1,7 @@
 #pragma once
 #include "point.hpp"
 #include <vector>
+#include <functional>
 
 struct MacroGene {
 
@@ -22,6 +23,8 @@ struct Chromosome {
 
     void calcTotalDistance(const std::vector<Point>& points);
 
+    void calcFitness(int num_of_city);
+
     int edgeReverse(int start, int target_codon, int num_of_city);
 
     int getLocusByFirstCodon(int target, int num_of_city);
@@ -30,12 +33,19 @@ struct Chromosome {
 
     void reversePath(int start, int end, int num_of_city);
 
-    bool two_opt(int swap1, int swap2, std::vector<Point> points, int num_of_city);
+    void applyOptimize2D(std::function<bool(int, int, std::vector<Point>&, int)>& func, std::vector<Point>& points, int num_of_city);
 
     void optimize(std::vector<Point>& points, int num_of_city);
 
+    bool twoOpt(int swap1, int swap2, std::vector<Point> points, int num_of_city);
+
+    bool one_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city);
+
+    bool two_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city);
+
     std::vector<MacroGene> chromosome;
     double total_distance;
+    double fitness;
 };
 
 
@@ -69,7 +79,7 @@ struct GeneticAlgorithm {
     std::vector<Chromosome> unit_next;
     std::vector<Chromosome> unit_now;
     Chromosome best_chromosome;
-    double distance_ave;
+    double fitness_ave;
 
     std::vector<Point> points;
     int num_of_city;

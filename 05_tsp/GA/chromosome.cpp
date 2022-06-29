@@ -22,6 +22,12 @@ void Chromosome::calcTotalDistance(const std::vector<Point>& points)
     }
 }
 
+void Chromosome::calcFitness(int num_of_city)
+{
+    this->fitness = num_of_city * 100 / total_distance * num_of_city * 100 / total_distance * num_of_city * 100 / total_distance;
+}
+
+
 int Chromosome::edgeReverse(int start, int target_codon, int num_of_city)
 {
     auto locus = (start + 1) % num_of_city;
@@ -62,7 +68,71 @@ void Chromosome::reversePath(int start, int end, int num_of_city)
     }
 }
 
-bool Chromosome::two_opt(int swap1, int swap2, std::vector<Point> points, int num_of_city)
+void Chromosome::applyOptimize2D(std::function<bool(int, int, std::vector<Point>&, int)>& func, std::vector<Point>& points, int num_of_city)
+{
+    bool is_end = false;
+    int count = 0;
+    while (!is_end && count < 1) {
+        for (int a = 1; a < num_of_city; ++a) {
+            is_end = true;
+            for (int b = a + 1; b < num_of_city; ++b) {
+                ++count;
+                if (func(a, b, points, num_of_city)) {
+                    is_end = false;
+                }
+            }
+        }
+    }
+}
+
+void Chromosome::optimize(std::vector<Point>& points, int num_of_city)
+{
+    //2opt
+    //auto two_opt = [&](int a, int b, std::vector<Point>& points, int num_of_city){return twoOpt(a, b, points, num_of_city);};
+    //applyOptimize2D(two_opt, points, num_of_city);
+    bool is_end = false;
+    int count = 0;
+    while (!is_end && count < 1) {
+        ++count;
+        for (int a = 1; a < num_of_city; ++a) {
+            is_end = true;
+            for (int b = a + 1; b < num_of_city; ++b) {
+                ++count;
+                if (twoOpt(a, b, points, num_of_city)) {
+                    is_end = false;
+                }
+            }
+        }
+    }
+    is_end = false;
+    count = 0;
+    while (!is_end && count < 1) {
+        ++count;
+        for (int a = 1; a < num_of_city; ++a) {
+            is_end = true;
+            for (int b = a + 1; b < num_of_city; ++b) {
+                if (one_move(a, b, points, num_of_city)) {
+                    is_end = false;
+                }
+            }
+        }
+    }
+    is_end = false;
+    count = 0;
+    while (!is_end && count < 1) {
+        ++count;
+        for (int a = 1; a < num_of_city; ++a) {
+            is_end = true;
+            for (int b = a + 1; b < num_of_city; ++b) {
+                if (two_move(a, b, points, num_of_city)) {
+                    is_end = false;
+                }
+            }
+        }
+    }
+}
+
+bool Chromosome::twoOpt(int swap1, int swap2, std::vector<Point> points, int num_of_city)
 {
     double length_diff = 0;  //入れ替えた後の長さ合計 - 入れ替えた後の長さ合計
 
@@ -80,20 +150,69 @@ bool Chromosome::two_opt(int swap1, int swap2, std::vector<Point> points, int nu
     return false;
 }
 
-void Chromosome::optimize(std::vector<Point>& points, int num_of_city)
+bool Chromosome::one_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city)
 {
-    //2opt
-    bool is_end = false;
-    int count = 0;
-    while (!is_end && count < 1) {
-        for (int a = 1; a < num_of_city; ++a) {
-            is_end = true;
-            for (int b = a + 1; b < num_of_city; ++b) {
-                ++count;
-                if (two_opt(a, b, points, num_of_city)) {
-                    is_end = false;
-                }
-            }
-        }
+    if(target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0){
+        return false;
     }
+
+    double length_diff = 0;
+
+    length_diff -= getDistance(points, chromosome.at(target).codon1, chromosome.at(target).codon2, num_of_city);
+    length_diff -= getDistance(points, chromosome.at((target + 1) % num_of_city).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
+    length_diff -= getDistance(points, chromosome.at(insert_pos).codon1, chromosome.at(insert_pos).codon2, num_of_city);
+    length_diff += getDistance(points, chromosome.at(target).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
+    length_diff += getDistance(points, chromosome.at(target).codon2, chromosome.at(insert_pos).codon1, num_of_city);
+    length_diff += getDistance(points, chromosome.at(target).codon2, chromosome.at(insert_pos).codon2, num_of_city);
+
+    if (length_diff < 0) {  //入れ替えると長さが短くなる場合
+        total_distance += length_diff;
+        chromosome.at((target + 1) % num_of_city).codon1 = chromosome.at(target).codon1;
+        chromosome.at(target).codon1 = chromosome.at(insert_pos).codon1;
+        chromosome.at(insert_pos).codon1 = chromosome.at(target).codon2;
+
+        chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(target));
+        int erase_pos = target < insert_pos ? target : target + 1;
+        chromosome.erase(chromosome.begin() + erase_pos);
+        return true;
+    }
+    return false;
+}
+
+bool Chromosome::two_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city)
+{
+    if(target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0 || (target - 1 - insert_pos) % num_of_city == 0){
+        return false;
+    }
+
+    double length_diff = 0;
+
+    length_diff -= getDistance(points, chromosome.at((target - 1 + num_of_city) % num_of_city).codon1, chromosome.at((target - 1 + num_of_city) % num_of_city).codon2, num_of_city);
+    length_diff -= getDistance(points, chromosome.at((target + 1) % num_of_city).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
+    length_diff -= getDistance(points, chromosome.at(insert_pos).codon1, chromosome.at(insert_pos).codon2, num_of_city);
+    length_diff += getDistance(points, chromosome.at((target - 1 + num_of_city) % num_of_city).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
+    length_diff += getDistance(points, chromosome.at(target).codon1, chromosome.at(insert_pos).codon1, num_of_city);
+    length_diff += getDistance(points, chromosome.at(target).codon2, chromosome.at(insert_pos).codon2, num_of_city);
+
+    if (length_diff < 0) {  //入れ替えると長さが短くなる場合
+        total_distance += length_diff;
+        chromosome.at((target + 1) % num_of_city).codon1 = chromosome.at((target - 1 + num_of_city) % num_of_city).codon1;
+        chromosome.at((target - 1 + num_of_city) % num_of_city).codon1 = chromosome.at(insert_pos).codon1;
+        chromosome.at(insert_pos).codon1 = chromosome.at(target).codon2;
+
+        if(target != 0){
+            chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(target));
+            chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(target - 1));
+            int erase_pos = target < insert_pos ? target : target + 2;
+            chromosome.erase(chromosome.begin() + erase_pos);
+            chromosome.erase(chromosome.begin() + erase_pos - 1);
+        } else {
+            chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(num_of_city - 1));
+            chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(0));
+            chromosome.erase(chromosome.begin() + 0);
+            chromosome.erase(chromosome.begin() + num_of_city);
+        }
+        return true;
+    }
+    return false;
 }

@@ -38,17 +38,18 @@ void GeneticAlgorithm::init()
         unit_now.push_back(std::move(chromosome));
     }
 
-    distance_ave = 0;
+    fitness_ave = 0;
     best_chromosome = unit_now.at(0);
     for (auto& chromosome : unit_now) {
         chromosome.calcTotalDistance(points);
-        distance_ave += chromosome.total_distance;
+        chromosome.calcFitness(num_of_city);
+        fitness_ave += chromosome.fitness;
         if (chromosome.total_distance < best_chromosome.total_distance) {
             this->best_chromosome = chromosome;
         }
     }
     best_chromosome.calcTotalDistance(points);
-    distance_ave = distance_ave / param.N_p1;
+    fitness_ave = fitness_ave / param.N_p1;
 }
 
 void GeneticAlgorithm::optimizePartly(int part_index, int parts_num)
@@ -56,6 +57,7 @@ void GeneticAlgorithm::optimizePartly(int part_index, int parts_num)
     for (int i = unit_next.size() * part_index / parts_num; i < unit_next.size() * (part_index + 1) / parts_num; i++) {
         unit_next.at(i).calcTotalDistance(points);
         unit_next.at(i).optimize(points, num_of_city);
+        unit_next.at(i).calcFitness(num_of_city);
     };
 }
 
@@ -109,16 +111,16 @@ void GeneticAlgorithm::selection()
     assert(bestNp1.size() == param.N_p1);
 
     unit_now.clear();
-    distance_ave = 0;
+    fitness_ave = 0;
 
     while (!bestNp1.empty()) {
         unit_now.push_back(bestNp1.top());
-        distance_ave += bestNp1.top().total_distance;
+        fitness_ave += bestNp1.top().fitness;
         bestNp1.pop();
     }
 
     best_chromosome = unit_now.back();
-    distance_ave = distance_ave / param.N_p1;
+    fitness_ave = fitness_ave / param.N_p1;
 }
 
 void GeneticAlgorithm::edgeExchange(int parent1, int parent2)
@@ -144,7 +146,7 @@ void GeneticAlgorithm::createNextUnit()
 {
     unit_next.clear();
     for (auto& chromo : unit_now) {
-        int num_of_child = param.N_p2 / param.N_p1 * chromo.total_distance / distance_ave;
+        int num_of_child = param.N_p2 / param.N_p1 * chromo.fitness / fitness_ave;
         for (int i = 0; i < num_of_child; i++) {
             unit_next.push_back(chromo);
         }
