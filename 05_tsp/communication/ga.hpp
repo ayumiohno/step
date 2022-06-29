@@ -1,0 +1,392 @@
+#pragma once
+#include "chromosome.hpp"
+#include "macro_gene.hpp"
+#include "point.hpp"
+#include "tsp.hpp"
+#include <algorithm>
+#include <arpa/inet.h>  //バイトオーダの変換に利用
+#include <assert.h>
+#include <cstring>
+#include <iostream>
+#include <queue>
+#include <random>
+#include <set>
+#include <stdio.h>
+#include <sys/socket.h>  //アドレスドメイン
+#include <sys/types.h>   //ソケットタイプ
+#include <thread>
+#include <unistd.h>  //close()に利用
+#include <vector>
+
+std::random_device rd;
+std::default_random_engine eng(rd());
+std::uniform_int_distribution<int> distr(1, 1000000000);
+
+template <int NUM_OF_CITY>
+struct GeneticAlgorithm {
+
+    struct Param {
+        int N_p1;
+        int N_p2;
+        int cycle;
+        int mutation_rate;
+    } param;
+
+    GeneticAlgorithm<NUM_OF_CITY>(std::vector<Point>& points, int N_p1, int N_p2, int cycle, int mutation_rate)
+    {
+        this->points = points;
+        param.N_p1 = N_p1;
+        param.N_p2 = N_p2;
+        param.cycle = cycle;
+        param.mutation_rate = mutation_rate;
+        this->num_of_city = points.size();
+    }
+
+    void init()
+    {
+        // Chromosomeをrandomに生成
+        std::vector<int> order;
+        for (int i = 0; i < num_of_city; i++) {
+            order.push_back(i);
+        }
+
+        for (int i = 0; i < param.N_p1; i++) {
+            std::shuffle(order.begin(), order.end(), eng);
+            Chromosome<NUM_OF_CITY> chromosome{num_of_city, order};
+            unit_now.push_back(std::move(chromosome));
+        }
+
+        fitness_ave = 0;
+        best_chromosome = unit_now.at(0);
+        for (auto& chromosome : unit_now) {
+            chromosome.calcTotalDistance(points);
+            chromosome.calcFitness(num_of_city);
+            fitness_ave += chromosome.fitness;
+            if (chromosome.total_distance < best_chromosome.total_distance) {
+                this->best_chromosome = chromosome;
+            }
+        }
+        best_chromosome.calcTotalDistance(points);
+        fitness_ave = fitness_ave / param.N_p1;
+    }
+
+    void optimizePartly(int part_index, int parts_num)
+    {
+        for (int i = unit_next.size() * part_index / parts_num;
+             i < unit_next.size() * (part_index + 1) / parts_num; i++) {
+            unit_next.at(i).calcTotalDistance(points);
+            unit_next.at(i).optimize(points, num_of_city);
+            unit_next.at(i).calcFitness(num_of_city);
+        };
+    }
+
+    void client(int start, int end)
+    {
+
+        //ソケットの生成
+        int sockfd = socket(AF_INET, SOCK_STREAM, 0);              //アドレスドメイン, ソケットタイプ, プロトコル
+        if (sockfd < 0) {                                          //エラー処理
+            std::cout << "Error socket:" << std::strerror(errno);  //標準出力
+            exit(1);                                               //異常終了
+        }
+
+        //アドレスの生成
+        struct sockaddr_in addr;                        //接続先の情報用の構造体(ipv4)
+        memset(&addr, 0, sizeof(struct sockaddr_in));   // memsetで初期化
+        addr.sin_family = AF_INET;                      //アドレスファミリ(ipv4)
+        addr.sin_port = htons(1234);                    //ポート番号,htons()関数は16bitホストバイトオーダーをネットワークバイトオーダーに変換
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1");  // IPアドレス,inet_addr()関数はアドレスの翻訳
+
+        //ソケット接続要求
+        connect(sockfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));  //ソケット, アドレスポインタ, アドレスサイズ
+
+        if (start == -1) {
+            int num = -1;
+            send(sockfd, &num, sizeof(int), 0);  //送信
+            return;
+        }
+
+        int num = end - start;
+        send(sockfd, &num, sizeof(int), 0);  //送信
+
+        //データ送信
+        for (int i = start; i < end; ++i) {
+            //usleep(10000);
+            send(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);  //送信
+            bool is;
+            recv(sockfd, &is, sizeof(bool), 0);
+        }
+
+        //データ受信
+        for (int i = start; i < end; ++i) {
+            recv(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);  //送信
+            bool is;
+            send(sockfd, &is, sizeof(bool), 0);
+        }
+
+        //ソケットクローズ
+        close(sockfd);
+    }
+
+    void optimizePartlyByServer(int part_index_s, int part_index_e, int parts_num)
+    {
+        client(unit_next.size() * part_index_s / parts_num, unit_next.size() * (part_index_e + 1) / parts_num);
+    }
+
+    void optimizeUnitNext()
+    {
+        //auto optimizePartly0 = [&]() { optimizePartlyByServer(0, 0, 6); };
+        auto optimizePartly1 = [&]() { optimizePartly(1, 7); };
+        auto optimizePartly2 = [&]() { optimizePartly(2, 7); };
+        auto optimizePartly3 = [&]() { optimizePartly(3, 7); };
+        auto optimizePartly4 = [&]() { optimizePartly(4, 7); };
+        auto optimizePartly5 = [&]() { optimizePartly(5, 7); };
+        auto optimizePartly6 = [&]() { optimizePartly(6, 7); };
+
+        std::thread th1(optimizePartly1);
+        std::thread th2(optimizePartly2);
+        std::thread th3(optimizePartly3);
+        std::thread th4(optimizePartly4);
+        std::thread th5(optimizePartly5);
+        std::thread th6(optimizePartly6);
+
+        optimizePartlyByServer(0, 0, 7);
+
+        th1.join();
+        th2.join();
+        th3.join();
+        th4.join();
+        th5.join();
+        th6.join();
+    }
+
+    void selection()
+    {
+        optimizeUnitNext();
+        unit_next.push_back(best_chromosome);
+        auto comp = [](const auto& a, const auto& b) {
+            return a.total_distance < b.total_distance;
+        };
+        std::priority_queue<Chromosome<NUM_OF_CITY>, std::vector<Chromosome<NUM_OF_CITY>>, decltype(comp)>
+            bestNp1;
+        std::set<double> used;
+        assert(unit_next.size() >= param.N_p1);
+
+        for (auto& chromo : unit_next) {
+            double distance = chromo.total_distance;
+            if (used.count(distance)) {
+                continue;
+            } else {
+                used.insert(distance);
+            }
+            if (bestNp1.size() < param.N_p1) {
+                bestNp1.push(chromo);
+            } else if (distance < bestNp1.top().total_distance) {
+                bestNp1.pop();
+                bestNp1.push(chromo);
+            }
+        }
+        assert(bestNp1.size() == param.N_p1);
+
+        unit_now.clear();
+        fitness_ave = 0;
+
+        while (!bestNp1.empty()) {
+            unit_now.push_back(bestNp1.top());
+            fitness_ave += bestNp1.top().fitness;
+            bestNp1.pop();
+        }
+
+        best_chromosome = unit_now.back();
+        fitness_ave = fitness_ave / param.N_p1;
+    }
+
+    void edgeExchange(int parent1, int parent2)
+    {
+        assert(parent1 < unit_next.size());
+        assert(parent2 < unit_next.size());
+        int locus1_s = distr(eng) % num_of_city;
+        int locus2_s = unit_next.at(parent2).getLocusByFirstCodon(
+            unit_next.at(parent1).chromosome.at(locus1_s).codon1, num_of_city);
+        assert(unit_next.at(parent1).chromosome.at(locus1_s).codon1 == unit_next.at(parent2).chromosome.at(locus2_s).codon1);
+        while (true) {
+            int locus1_g = unit_next.at(parent1).edgeReverse(
+                locus1_s, unit_next.at(parent2).chromosome.at(locus2_s).codon2,
+                num_of_city);
+            int locus2_g = unit_next.at(parent2).edgeReverse(
+                locus2_s, unit_next.at(parent1).chromosome.at(locus1_s).codon2,
+                num_of_city);
+            std::swap(unit_next.at(parent1).chromosome.at(locus1_s),
+                unit_next.at(parent2).chromosome.at(locus2_s));
+            if (unit_next.at(parent1).chromosome.at(locus1_s).codon2 == unit_next.at(parent2).chromosome.at(locus2_s).codon2) {
+                break;
+            }
+            locus1_s = locus1_g;
+            locus2_s = locus2_g;
+        }
+    }
+
+    void createNextUnit()
+    {
+        unit_next.clear();
+        for (auto& chromo : unit_now) {
+            int num_of_child = param.N_p2 / param.N_p1 * chromo.fitness / fitness_ave;
+            for (int i = 0; i < num_of_child; i++) {
+                unit_next.push_back(chromo);
+            }
+        }
+    }
+
+    void crossOverNextUnit()
+    {
+        // edgeeExchange and selection
+        // mutation
+        std::shuffle(unit_next.begin(), unit_next.end(), eng);
+        int mutation_num = (int)unit_next.size() / param.mutation_rate;
+        for (int i = mutation_num; 2 * i + 1 < unit_next.size(); ++i) {
+            edgeExchange(2 * i, 2 * i + 1);
+        }
+
+        for (int i = 0; i < mutation_num; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                int rand1 = distr(eng) % num_of_city;
+                int rand2 = distr(eng) % num_of_city;
+                unit_next.at(i).mutation(rand1, rand2, num_of_city);  // random
+            }
+        }
+    }
+
+    double evolution()
+    {
+        init();
+        for (int i = 0; i < param.cycle; ++i) {
+            createNextUnit();
+            crossOverNextUnit();
+            selection();
+            std::cout << best_chromosome.total_distance << std::endl;
+        }
+        client(-1, -1);
+        std::vector<Point> best_points;
+        double best_distance = best_chromosome.total_distance;
+        for (auto gene : best_chromosome.chromosome) {
+            best_points.push_back(points.at(gene.codon1));
+        }
+        bool is_end = false;
+        int count = 0;
+        while (!is_end && count < 10000000) {
+            for (int a = 1; a < num_of_city; ++a) {
+                is_end = true;
+                for (int b = a + 1; b < num_of_city; ++b) {
+                    ++count;
+                    if (reverseSubPath(a, b, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+        }
+        std::cerr << is_end << std::endl;
+        for (int j = 0; j < 3; ++j) {
+            std::cerr << j << std::endl;
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 0; base < num_of_city; ++base) {
+                    ++count;
+                    if (movePoint(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 1; base < num_of_city; ++base) {
+                    ++count;
+                    if (move2Points(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 1; base < num_of_city; ++base) {
+                    ++count;
+                    if (move3Points(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 1; base < num_of_city; ++base) {
+                    ++count;
+                    if (move4Points(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int a = 1; a < num_of_city; ++a) {
+                    for (int b = a + 1; b < num_of_city; ++b) {
+                        ++count;
+                        if (reverseSubPath(a, b, best_points, best_distance, num_of_city)) {
+                            is_end = false;
+                        }
+                    }
+                }
+            }
+
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 1) {
+                is_end = true;
+                for (int a = 0; a < num_of_city; ++a) {
+                    for (int b = a + 1; b < num_of_city; ++b) {
+                        for (int c = b + 1; c < num_of_city; ++c) {
+                            ++count;
+                            if (reverseSubPath3(a, b, c, best_points, best_distance,
+                                    num_of_city)) {
+                                is_end = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return best_distance;
+    }
+
+
+    std::vector<Chromosome<NUM_OF_CITY>> unit_next;
+    std::vector<Chromosome<NUM_OF_CITY>> unit_now;
+    Chromosome<NUM_OF_CITY> best_chromosome;
+    double fitness_ave;
+
+    std::vector<Point> points;
+    int num_of_city;
+};
+
+
+/*debug*****************************************************
+      std::cout << locus1_s << " " << locus2_s << std::endl;
+      std::cout << "parent1: ";
+      for(auto& gene : unit_next.at(parent1).chromosome){
+          std::cout << gene.codon1 << " " << gene.codon2 << " : ";
+      }
+      std::cout << std::endl;
+      std::cout << "parent2: ";
+      for(auto& gene : unit_next.at(parent2).chromosome){
+          std::cout << gene.codon1 << " " << gene.codon2 << " : ";
+      }
+      std::cout << std::endl;
+  ************************************************************/

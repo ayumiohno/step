@@ -1,7 +1,7 @@
 #pragma once
 #include "point.hpp"
-#include <vector>
 #include <functional>
+#include <vector>
 
 struct MacroGene {
 
@@ -51,7 +51,6 @@ struct Chromosome {
 
 struct GeneticAlgorithm {
 
-    double evolution();
 
     struct Parem {
         int N_p1;
@@ -60,7 +59,10 @@ struct GeneticAlgorithm {
         int mutation_rate;
     } param;
 
+
     GeneticAlgorithm(std::vector<Point>& points, int N_p1, int N_p2, int cycle, int mutation_rate);
+
+    double evolution();
 
     void init();
 
