@@ -109,13 +109,14 @@ struct GeneticAlgorithm {
 
         //optimizeしてほしいデータを送信
         for (int i = start; i < end; ++i) {
-            for (int div = 0; div < 4; ++div) {
+            for (int div = 0; div < 16; ++div) {
                 bool is = false;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 16;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 16;
                 while (!is) {
                     assert(unit_next.at(i).total_distance > 1000);
-                    send(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0);
+                    auto size = send(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0);
+                    std::cout << size << " " << ed - st << std::endl;
                     recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
                 }
             }
@@ -123,12 +124,13 @@ struct GeneticAlgorithm {
 
         //optimize後のデータを受信
         for (int i = start; i < end; ++i) {
-            for (int div = 0; div < 4; ++div) {
+            std::cerr << i << std::endl;
+            for (int div = 0; div < 16; ++div) {
                 bool is = false;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 16;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 16;
                 while (!is) {
-                    is = recv(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0) == sizeof(ed - st);
+                    is = recv(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0) == ed - st;
                     send(sockfd, &is, sizeof(bool), 0);
                 }
             }
