@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <vector>
 
-constexpr int FILE_NUM = 5;
+constexpr int FILE_NUM = 4;
 constexpr std::array<int, 8> NUMS = {5, 8, 16, 64, 128, 512, 2048, 8192};
 constexpr int NUM_OF_CITY = NUMS.at(FILE_NUM);
 
