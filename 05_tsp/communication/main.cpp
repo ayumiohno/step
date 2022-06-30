@@ -1,13 +1,13 @@
 #include "ga.hpp"
 #include "point.hpp"
 #include "tsp.hpp"
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <array>
 
 constexpr int FILE_NUM = 4;
 constexpr std::array<int, 8> NUMS = {5, 8, 16, 64, 128, 512, 2048, 8192};
@@ -19,7 +19,7 @@ int main()
     std::vector<Point> points;
     std::vector<Point> init_points;
     {
-        auto file_name = "../google-step-tsp/input_" + std::to_string(FILE_NUM) + ".csv";
+        auto file_name = "../testcase/input_" + std::to_string(FILE_NUM) + ".csv";
         std::ifstream file(file_name);
         std::string data;
         while (std::getline(file, data)) {

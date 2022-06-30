@@ -20,7 +20,7 @@ int main()
 {
     std::vector<Point> points;
     {
-        auto file_name = "../google-step-tsp/input_" + std::to_string(FILE_NUM) + ".csv";
+        auto file_name = "../testcase/input_" + std::to_string(FILE_NUM) + ".csv";
         std::ifstream file(file_name);
         std::string data;
         while (std::getline(file, data)) {
