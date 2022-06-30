@@ -95,9 +95,11 @@ int main()
         for (int i = 0; i < num; ++i) {
             auto chromo = new Chromosome<NUM_OF_CITY>{};
             chromos.push_back(chromo);
-            recv(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0);
-            bool is = true;
-            send(connect, &is, sizeof(bool), 0);  //受信できたとclientに伝える
+            bool is = false;
+            while (!is) {
+                is = recv(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0) == sizeof(Chromosome<NUM_OF_CITY>);
+                send(connect, &is, sizeof(bool), 0);
+            }
         }
 
 
@@ -135,9 +137,11 @@ int main()
         th6.join();
 
         for (int i = 0; i < num; ++i) {
-            send(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0);
-            bool is;
-            recv(connect, &is, sizeof(bool), 0);
+            bool is = false;
+            while (!is) {
+                send(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0);
+                recv(connect, &is, sizeof(bool), 0);
+            }
         }
         ///optimize後のデータを送信
         for (int i = 0; i < num; ++i) {

@@ -109,16 +109,20 @@ struct GeneticAlgorithm {
 
         //optimizeしてほしいデータを送信
         for (int i = start; i < end; ++i) {
-            send(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);
-            bool is;
-            recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
+            bool is = false;
+            while (!is) {
+                send(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);
+                recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
+            }
         }
 
         //optimize後のデータを受信
         for (int i = start; i < end; ++i) {
-            recv(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);
-            bool is;
-            send(sockfd, &is, sizeof(bool), 0);
+            bool is = false;
+            while (!is) {
+                is = recv(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0) == sizeof(Chromosome<NUM_OF_CITY>);
+                send(sockfd, &is, sizeof(bool), 0);
+            }
         }
 
         close(sockfd);
