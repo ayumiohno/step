@@ -15,9 +15,7 @@ constexpr int NUM_OF_CITY = NUMS.at(FILE_NUM);
 
 int main()
 {
-
     std::vector<Point> points;
-    std::vector<Point> init_points;
     {
         auto file_name = "../testcase/input_" + std::to_string(FILE_NUM) + ".csv";
         std::ifstream file(file_name);

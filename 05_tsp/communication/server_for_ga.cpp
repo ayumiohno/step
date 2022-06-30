@@ -95,10 +95,14 @@ int main()
         for (int i = 0; i < num; ++i) {
             auto chromo = new Chromosome<NUM_OF_CITY>{};
             chromos.push_back(chromo);
-            bool is = false;
-            while (!is) {
-                is = recv(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0) == sizeof(Chromosome<NUM_OF_CITY>);
-                send(connect, &is, sizeof(bool), 0);
+            for (int div = 0; div < 4; ++div) {
+                bool is = false;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                while (!is) {
+                    is = recv(connect, (void*)((char*)chromos.at(i) + st), ed - st, 0) == sizeof(ed - st);
+                    send(connect, &is, sizeof(bool), 0);
+                }
             }
         }
 
@@ -137,10 +141,14 @@ int main()
         th6.join();
 
         for (int i = 0; i < num; ++i) {
-            bool is = false;
-            while (!is) {
-                send(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0);
-                recv(connect, &is, sizeof(bool), 0);
+            for (int div = 0; div < 4; ++div) {
+                bool is = false;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                while (!is) {
+                    send(connect, (void*)((char*)chromos.at(i) + st), ed - st, 0);
+                    recv(connect, &is, sizeof(bool), 0);  //受信したら次を送ってOK
+                }
             }
         }
         ///optimize後のデータを送信

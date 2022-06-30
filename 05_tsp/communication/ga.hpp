@@ -109,22 +109,30 @@ struct GeneticAlgorithm {
 
         //optimizeしてほしいデータを送信
         for (int i = start; i < end; ++i) {
-            bool is = false;
-            while (!is) {
-                send(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);
-                recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
+            for (int div = 0; div < 4; ++div) {
+                bool is = false;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                while (!is) {
+                    assert(unit_next.at(i).total_distance > 1000);
+                    send(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0);
+                    recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
+                }
             }
         }
 
         //optimize後のデータを受信
         for (int i = start; i < end; ++i) {
-            bool is = false;
-            while (!is) {
-                is = recv(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0) == sizeof(Chromosome<NUM_OF_CITY>);
-                send(sockfd, &is, sizeof(bool), 0);
+            for (int div = 0; div < 4; ++div) {
+                bool is = false;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                while (!is) {
+                    is = recv(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0) == sizeof(ed - st);
+                    send(sockfd, &is, sizeof(bool), 0);
+                }
             }
         }
-
         close(sockfd);
     }
 
