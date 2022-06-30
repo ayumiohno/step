@@ -22,6 +22,8 @@ std::random_device rd;
 std::default_random_engine eng(rd());
 std::uniform_int_distribution<int> distr(1, 1000000000);
 
+constexpr int DIV = 16;
+
 template <int NUM_OF_CITY>
 struct GeneticAlgorithm {
 
@@ -72,8 +74,7 @@ struct GeneticAlgorithm {
 
     void optimizePartly(int part_index, int parts_num)
     {
-        for (int i = unit_next.size() * part_index / parts_num;
-             i < unit_next.size() * (part_index + 1) / parts_num; i++) {
+        for (int i = unit_next.size() * part_index / parts_num; i < unit_next.size() * (part_index + 1) / parts_num; i++) {
             unit_next.at(i).calcTotalDistance(points);
             unit_next.at(i).optimize(points, num_of_city);
             unit_next.at(i).calcFitness(num_of_city);
@@ -109,11 +110,19 @@ struct GeneticAlgorithm {
 
         //optimizeしてほしいデータを送信
         for (int i = start; i < end; ++i) {
-            for (int div = 0; div < 16; ++div) {
+            for (int div = 0; div < DIV; ++div) {
                 bool is = false;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 16;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 16;
+                int count = 0;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
                 while (!is) {
+                    ++count;
+                    if (count > 10) {
+                        div = DIV;
+                        std::cout << "skip " << i << std::endl;
+                        --num;
+                        break;
+                    }
                     assert(unit_next.at(i).total_distance > 1000);
                     auto size = send(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0);
                     std::cout << size << " " << ed - st << std::endl;
@@ -123,17 +132,28 @@ struct GeneticAlgorithm {
         }
 
         //optimize後のデータを受信
-        for (int i = start; i < end; ++i) {
+        for (int i = start; i < start + num; ++i) {
             std::cerr << i << std::endl;
-            for (int div = 0; div < 16; ++div) {
+            for (int div = 0; div < DIV; ++div) {
                 bool is = false;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 16;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 16;
+                int count = 0;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
                 while (!is) {
+                    ++count;
+                    if (count > 10) {
+                        div = 0;
+                        --num;
+                        std::cout << "skip " << i << std::endl;
+                        break;
+                    }
                     is = recv(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0) == ed - st;
                     send(sockfd, &is, sizeof(bool), 0);
                 }
             }
+        }
+        for (int i = start + num; i < end; ++i) {
+            unit_next.at(i) = best_chromosome;
         }
         close(sockfd);
     }
@@ -178,8 +198,7 @@ struct GeneticAlgorithm {
         auto comp = [](const auto& a, const auto& b) {
             return a.total_distance < b.total_distance;
         };
-        std::priority_queue<Chromosome<NUM_OF_CITY>, std::vector<Chromosome<NUM_OF_CITY>>, decltype(comp)>
-            bestNp1;
+        std::priority_queue<Chromosome<NUM_OF_CITY>, std::vector<Chromosome<NUM_OF_CITY>>, decltype(comp)> bestNp1;
         std::set<double> used;
         assert(unit_next.size() >= param.N_p1);
 

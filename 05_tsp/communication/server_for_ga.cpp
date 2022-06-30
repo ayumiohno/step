@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <vector>
 
+constexpr int DIV = 16;
 constexpr int FILE_NUM = 4;
 constexpr std::array<int, 8> NUMS = {5, 8, 16, 64, 128, 512, 2048, 8192};
 constexpr int NUM_OF_CITY = NUMS.at(FILE_NUM);
@@ -92,20 +93,29 @@ int main()
 
         //受信
         std::vector<Chromosome<NUM_OF_CITY>*> chromos;
+        int new_num = num;
         for (int i = 0; i < num; ++i) {
             auto chromo = new Chromosome<NUM_OF_CITY>{};
             chromos.push_back(chromo);
-            for (int div = 0; div < 4; ++div) {
+            for (int div = 0; div < DIV; ++div) {
                 bool is = false;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                int count = 0;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
                 while (!is) {
-                    is = recv(connect, (void*)((char*)chromos.at(i) + st), ed - st, 0) == sizeof(ed - st);
+                    ++count;
+                    if (count > 10) {
+                        div = 0;
+                        std::cout << "skip " << i << std::endl;
+                        --num;
+                        break;
+                    }
+                    is = recv(connect, (void*)((char*)chromos.at(i) + st), ed - st, 0) == ed - st;
                     send(connect, &is, sizeof(bool), 0);
                 }
             }
         }
-
+        num = new_num;
 
         //optimize
         int th_num = 7;
@@ -141,11 +151,18 @@ int main()
         th6.join();
 
         for (int i = 0; i < num; ++i) {
-            for (int div = 0; div < 4; ++div) {
+            for (int div = 0; div < DIV; ++div) {
                 bool is = false;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / 4;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / 4;
+                int count = 0;
+                auto st = sizeof(Chromosome<NUM_OF_CITY>) * DIV / 4;
+                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (DIV + 1) / 4;
                 while (!is) {
+                    ++count;
+                    if (count > 10) {
+                        div = DIV;
+                        std::cout << "skip " << i << std::endl;
+                        break;
+                    }
                     send(connect, (void*)((char*)chromos.at(i) + st), ed - st, 0);
                     recv(connect, &is, sizeof(bool), 0);  //受信したら次を送ってOK
                 }
