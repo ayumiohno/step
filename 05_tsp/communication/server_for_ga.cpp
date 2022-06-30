@@ -102,7 +102,7 @@ int main()
 
 
         //optimize
-        int th_num = 1;
+        int th_num = 7;
         auto optimizePartly = [&](int index) {
             int start = index * num / th_num;
             int end = (index + 1) * num / th_num;
@@ -112,10 +112,27 @@ int main()
                 chromos[i]->calcFitness(points.size());
             }
         };
-        auto optimizePartly0 = [&]() { optimizePartly(0); };
-        std::thread th0(optimizePartly0);
+        auto optimizePartly1 = [&]() { optimizePartly(1); };
+        auto optimizePartly2 = [&]() { optimizePartly(2); };
+        auto optimizePartly3 = [&]() { optimizePartly(3); };
+        auto optimizePartly4 = [&]() { optimizePartly(4); };
+        auto optimizePartly5 = [&]() { optimizePartly(5); };
+        auto optimizePartly6 = [&]() { optimizePartly(6); };
+        std::thread th1(optimizePartly1);
+        std::thread th2(optimizePartly2);
+        std::thread th3(optimizePartly3);
+        std::thread th4(optimizePartly4);
+        std::thread th5(optimizePartly5);
+        std::thread th6(optimizePartly6);
 
-        th0.join();
+        optimizePartly(0);
+
+        th1.join();
+        th2.join();
+        th3.join();
+        th4.join();
+        th5.join();
+        th6.join();
 
         for (int i = 0; i < num; ++i) {
             send(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0);

@@ -132,12 +132,12 @@ struct GeneticAlgorithm {
     void optimizeUnitNext()
     {
         //auto optimizePartly0 = [&]() { optimizePartlyByServer(0, 0, 6); };
-        auto optimizePartly1 = [&]() { optimizePartly(1, 7); };
-        auto optimizePartly2 = [&]() { optimizePartly(2, 7); };
-        auto optimizePartly3 = [&]() { optimizePartly(3, 7); };
-        auto optimizePartly4 = [&]() { optimizePartly(4, 7); };
-        auto optimizePartly5 = [&]() { optimizePartly(5, 7); };
-        auto optimizePartly6 = [&]() { optimizePartly(6, 7); };
+        auto optimizePartly1 = [&]() { optimizePartly(6, 12); };
+        auto optimizePartly2 = [&]() { optimizePartly(7, 12); };
+        auto optimizePartly3 = [&]() { optimizePartly(8, 12); };
+        auto optimizePartly4 = [&]() { optimizePartly(9, 12); };
+        auto optimizePartly5 = [&]() { optimizePartly(10, 12); };
+        auto optimizePartly6 = [&]() { optimizePartly(11, 12); };
 
         std::thread th1(optimizePartly1);
         std::thread th2(optimizePartly2);
@@ -146,7 +146,7 @@ struct GeneticAlgorithm {
         std::thread th5(optimizePartly5);
         std::thread th6(optimizePartly6);
 
-        optimizePartlyByServer(0, 0, 7);
+        optimizePartlyByServer(0, 5, 12);
         //optimizePartly(0, 7);
 
         th1.join();
