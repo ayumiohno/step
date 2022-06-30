@@ -107,9 +107,9 @@ int main()
             int start = index * num / th_num;
             int end = (index + 1) * num / th_num;
             for (int i = start; i < end; ++i) {
-                send(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0);
-                bool is;
-                recv(connect, &is, sizeof(bool), 0);
+                chromos[i]->calcTotalDistance(points);
+                chromos[i]->optimize(points, points.size());
+                chromos[i]->calcFitness(points.size());
             }
         };
         auto optimizePartly0 = [&]() { optimizePartly(0); };
@@ -117,6 +117,11 @@ int main()
 
         th0.join();
 
+        for (int i = 0; i < num; ++i) {
+            send(connect, chromos[i], sizeof(Chromosome<NUM_OF_CITY>), 0);
+            bool is;
+            recv(connect, &is, sizeof(bool), 0);
+        }
         ///optimize後のデータを送信
         for (int i = 0; i < num; ++i) {
             delete chromos[i];

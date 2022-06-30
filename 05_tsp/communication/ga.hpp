@@ -147,6 +147,7 @@ struct GeneticAlgorithm {
         std::thread th6(optimizePartly6);
 
         optimizePartlyByServer(0, 0, 7);
+        //optimizePartly(0, 7);
 
         th1.join();
         th2.join();
@@ -264,6 +265,7 @@ struct GeneticAlgorithm {
         client(-1, -1);
         std::vector<Point> best_points;
         double best_distance = best_chromosome.total_distance;
+        std::cout << "best_distance: " << best_distance << std::endl;
         for (auto gene : best_chromosome.chromosome) {
             best_points.push_back(points.at(gene.codon1));
         }
