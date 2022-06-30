@@ -7,8 +7,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <array>
 
-constexpr int NUM_OF_CITY = 128;
+constexpr int FILE_NUM = 4;
+constexpr std::array<int, 8> NUMS = {5, 8, 16, 64, 128, 512, 2048, 8192};
+constexpr int NUM_OF_CITY = NUMS.at(FILE_NUM);
 
 int main()
 {
@@ -16,10 +19,7 @@ int main()
     std::vector<Point> points;
     std::vector<Point> init_points;
     {
-        std::cerr << "put file number" << std::endl;
-        std::string file_num;
-        std::cin >> file_num;
-        auto file_name = "../google-step-tsp/input_" + file_num + ".csv";
+        auto file_name = "../google-step-tsp/input_" + std::to_string(FILE_NUM) + ".csv";
         std::ifstream file(file_name);
         std::string data;
         while (std::getline(file, data)) {
@@ -33,6 +33,6 @@ int main()
         }
         file.close();
     }
-    GeneticAlgorithm<NUM_OF_CITY> GA{points, 100, 1000, 20, 20};
+    GeneticAlgorithm<NUM_OF_CITY> GA{points, 100, 1000, 20, 10};
     std::cout << GA.evolution() << std::endl;
 }

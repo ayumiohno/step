@@ -19,11 +19,11 @@ int main()
     }
 
     //アドレスの生成
-    struct sockaddr_in addr;                        //接続先の情報用の構造体(ipv4)
-    memset(&addr, 0, sizeof(struct sockaddr_in));   //memsetで初期化
-    addr.sin_family = AF_INET;                      //アドレスファミリ(ipv4)
-    addr.sin_port = htons(1234);                    //ポート番号,htons()関数は16bitホストバイトオーダーをネットワークバイトオーダーに変換
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");  //IPアドレス,inet_addr()関数はアドレスの翻訳
+    struct sockaddr_in addr;                          //接続先の情報用の構造体(ipv4)
+    memset(&addr, 0, sizeof(struct sockaddr_in));     //memsetで初期化
+    addr.sin_family = AF_INET;                        //アドレスファミリ(ipv4)
+    addr.sin_port = htons(1234);                      //ポート番号,htons()関数は16bitホストバイトオーダーをネットワークバイトオーダーに変換
+    addr.sin_addr.s_addr = inet_addr("192.168.1.5");  //IPアドレス,inet_addr()関数はアドレスの翻訳
 
     //ソケット登録
     if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {  //ソケット, アドレスポインタ, アドレスサイズ //エラー処理

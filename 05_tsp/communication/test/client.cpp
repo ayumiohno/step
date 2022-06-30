@@ -1,4 +1,4 @@
-#include "framework.hpp"
+#include "../chromosome.hpp"
 #include <arpa/inet.h>  //バイトオーダの変換に利用
 #include <cstring>
 #include <iostream>      //標準入出力
@@ -17,16 +17,21 @@ int client(bool is_finish)
         std::cout << "Error socket:" << std::strerror(errno);  //標準出力
         exit(1);                                               //異常終了
     }
+    std::cout << "sockfd" << std::endl;
 
     //アドレスの生成
-    struct sockaddr_in addr;                        //接続先の情報用の構造体(ipv4)
-    memset(&addr, 0, sizeof(struct sockaddr_in));   //memsetで初期化
-    addr.sin_family = AF_INET;                      //アドレスファミリ(ipv4)
-    addr.sin_port = htons(1234);                    //ポート番号,htons()関数は16bitホストバイトオーダーをネットワークバイトオーダーに変換
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");  //IPアドレス,inet_addr()関数はアドレスの翻訳
+    struct sockaddr_in addr;                          //接続先の情報用の構造体(ipv4)
+    memset(&addr, 0, sizeof(struct sockaddr_in));     //memsetで初期化
+    addr.sin_family = AF_INET;                        //アドレスファミリ(ipv4)
+    addr.sin_port = htons(1234);                      //ポート番号,htons()関数は16bitホストバイトオーダーをネットワークバイトオーダーに変換
+    addr.sin_addr.s_addr = inet_addr("192.168.1.5");  //IPアドレス,inet_addr()関数はアドレスの翻訳
 
     //ソケット接続要求
+    std::cout << "want to connect" << std::endl;
+
     connect(sockfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));  //ソケット, アドレスポインタ, アドレスサイズ
+
+    std::cout << "connected" << std::endl;
 
     if (is_finish) {
         int num = -1;

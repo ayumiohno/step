@@ -4,6 +4,7 @@
 #include "tsp.hpp"
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 #include <vector>
 
 template <int NUM_OF_CITY>
@@ -102,10 +103,14 @@ private:
         return false;
     }
 
-    bool one_move(int target, int insert_pos, std::vector<Point>& points,
-        int num_of_city)
+    //       ---  target ---  target+1 ---                 ---  target + 1  ---                                     --- target ---
+    //            a | b        b | c                               a | c                                                 a | c
+    //                                       =>           (insert_pos < target)                                  (insert_pos > target)
+    //          ---    insert_pos   ---               ---insert_pos  --- insert_pos + 1 ---            --- insert_pos - 1 --- insert_pos  ---
+    //                    d | e                             d | b            b | e                             d | b            b | e
+    bool one_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city)
     {
-        /*if (target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0) {
+        if (target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0) {
             return false;
         }
 
@@ -124,71 +129,113 @@ private:
         length_diff += getDistance(points, chromosome.at(target).codon2,
             chromosome.at(insert_pos).codon1, num_of_city);
         length_diff += getDistance(points, chromosome.at(target).codon2,
-            chromosome.at(insert_pos).codon2, num_of_city);*/
+            chromosome.at(insert_pos).codon2, num_of_city);
 
-        /*if (length_diff < 0) {  //入れ替えると長さが短くなる場合
+        if (length_diff < 0) {  //入れ替えると長さが短くなる場合
             total_distance += length_diff;
+
             chromosome.at((target + 1) % num_of_city).codon1 = chromosome.at(target).codon1;
             chromosome.at(target).codon1 = chromosome.at(insert_pos).codon1;
             chromosome.at(insert_pos).codon1 = chromosome.at(target).codon2;
 
-            chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(target));
-            int erase_pos = target < insert_pos ? target : target + 1;
-            chromosome.erase(chromosome.begin() + erase_pos);
+
+            if (insert_pos < target) {
+                for (int i = target; i > insert_pos; i--) {
+                    std::swap(chromosome.at(i), chromosome.at(i - 1));
+                }
+            } else {
+                for (int i = target; i < insert_pos - 1; i++) {
+                    std::swap(chromosome.at(i), chromosome.at(i + 1));
+                }
+            }
+
             return true;
-        }*/
+        }
         return false;
     }
 
-    bool two_move(int target, int insert_pos, std::vector<Point>& points,
-        int num_of_city)
+    //     target-1 --- target ---  target+1 ---             ---  target  ---                         --- target ---
+    //       a | b       b | c       c | d                         a | d                                   a | d
+    //                                       =>                                        or        
+    //          ---   insert_pos   ---                      --- insert_pos ---                      ---  insert_pos  ---
+    //                   d | e                          d | b      b | c     c | e                d | c    c | b    b | e
+
+    bool two_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city)
     {
-        /*if (target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0 || (target - 1 - insert_pos) % num_of_city == 0) {
+        if (target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0 || (target - 1 - insert_pos) % num_of_city == 0) {
             return false;
         }
 
         double length_diff = 0;
+        double length_diff1 = 0;
+        double length_diff2 = 0;
 
-        length_diff -= getDistance(
-            points, chromosome.at((target - 1 + num_of_city) % num_of_city).codon1,
-            chromosome.at((target - 1 + num_of_city) % num_of_city).codon2,
-            num_of_city);
-        length_diff -= getDistance(
-            points, chromosome.at((target + 1) % num_of_city).codon1,
-            chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
-        length_diff -= getDistance(points, chromosome.at(insert_pos).codon1,
-            chromosome.at(insert_pos).codon2, num_of_city);
-        length_diff += getDistance(
-            points, chromosome.at((target - 1 + num_of_city) % num_of_city).codon1,
-            chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
-        length_diff += getDistance(points, chromosome.at(target).codon1,
-            chromosome.at(insert_pos).codon1, num_of_city);
-        length_diff += getDistance(points, chromosome.at(target).codon2,
-            chromosome.at(insert_pos).codon2, num_of_city);*/
+        length_diff -= getDistance(points, chromosome.at((target - 1 + num_of_city) % num_of_city).codon1, chromosome.at((target - 1 + num_of_city) % num_of_city).codon2, num_of_city);
+        length_diff -= getDistance(points, chromosome.at((target + 1) % num_of_city).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
+        length_diff -= getDistance(points, chromosome.at(insert_pos).codon1, chromosome.at(insert_pos).codon2, num_of_city);
+        length_diff += getDistance(points, chromosome.at((target - 1 + num_of_city) % num_of_city).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
+        
+        length_diff1 += getDistance(points, chromosome.at(target).codon1, chromosome.at(insert_pos).codon1, num_of_city);
+        length_diff1 += getDistance(points, chromosome.at(target).codon2, chromosome.at(insert_pos).codon2, num_of_city);
 
-        /*if (length_diff < 0) {  //入れ替えると長さが短くなる場合
-            total_distance += length_diff;
+        length_diff2 += getDistance(points, chromosome.at(target).codon2, chromosome.at(insert_pos).codon1, num_of_city);
+        length_diff2 += getDistance(points, chromosome.at(target).codon1, chromosome.at(insert_pos).codon2, num_of_city);
+
+
+        length_diff += std::min(length_diff1, length_diff2);
+        if (length_diff < 0) {  //入れ替えると長さが短くなる場合
+            /*std::cout << "target: " << target << " insert " << insert_pos << std::endl;
+            std::cout << "before: ";
+            for(auto& gene : chromosome){
+                std::cout << gene.codon1 << " : " << gene.codon2 << " ";
+            }
+            std::cout << std::endl;*/
+
+            if(length_diff2 < length_diff1){
+                chromosome.at(target).inverse();
+                chromosome.at((target - 1 + num_of_city) % num_of_city).codon2 = chromosome.at(target).codon1;
+            } else {
+            }
+            total_distance += length_diff1;
+            
             chromosome.at((target + 1) % num_of_city).codon1 = chromosome.at((target - 1 + num_of_city) % num_of_city).codon1;
             chromosome.at((target - 1 + num_of_city) % num_of_city).codon1 = chromosome.at(insert_pos).codon1;
             chromosome.at(insert_pos).codon1 = chromosome.at(target).codon2;
 
-            if (target != 0) {
-                chromosome.insert(chromosome.begin() + insert_pos,
-                    chromosome.at(target));
-                chromosome.insert(chromosome.begin() + insert_pos,
-                    chromosome.at(target - 1));
-                int erase_pos = target < insert_pos ? target : target + 2;
-                chromosome.erase(chromosome.begin() + erase_pos);
-                chromosome.erase(chromosome.begin() + erase_pos - 1);
+            auto tar1 = chromosome.at((target - 1 + num_of_city) % num_of_city);
+            auto tar2 = chromosome.at(target);
+
+            if (target == 0){
+                for (int i = 0; i + 1 <= insert_pos - 1; i++) {
+                    chromosome.at(i) = chromosome.at(i + 1);
+                }
+                for (int i = num_of_city - 1; i - 1 <= insert_pos; i--) {
+                    chromosome.at(i) = chromosome.at(i - 1);
+                }
+                chromosome.at(insert_pos - 1) = tar1;
+                chromosome.at(insert_pos) = tar2;
+            } else if (insert_pos < target) {
+                for (int i = target; i - 2 >= insert_pos; i--) {
+                    chromosome.at(i) = chromosome.at(i - 2);
+                }
+                chromosome.at(insert_pos) = tar1;
+                chromosome.at(insert_pos + 1) = tar2;
             } else {
-                chromosome.insert(chromosome.begin() + insert_pos,
-                    chromosome.at(num_of_city - 1));
-                chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(0));
-                chromosome.erase(chromosome.begin() + 0);
-                chromosome.erase(chromosome.begin() + num_of_city);
+                for (int i = target - 1; i + 2 <= insert_pos - 1; i++) {
+                    chromosome.at(i) = chromosome.at(i + 2);
+                }
+                chromosome.at(insert_pos - 2) = tar1;
+                chromosome.at(insert_pos - 1) = tar2;
             }
+
+            /*std::cout << "after: ";
+            for(auto& gene : chromosome){
+                std::cout << gene.codon1 << " : " << gene.codon2 << " ";
+            }
+            std::cout << std::endl;*/
+
             return true;
-        }*/
+        }
         return false;
     }
 
@@ -197,7 +244,7 @@ public:
     {
         bool is_end = false;
         int count = 0;
-        while (!is_end && count < 1) {
+        while (!is_end & count < 5) {
             ++count;
             for (int a = 1; a < num_of_city; ++a) {
                 is_end = true;
@@ -213,9 +260,9 @@ public:
         count = 0;
         while (!is_end && count < 1) {
             ++count;
-            for (int a = 1; a < num_of_city; ++a) {
+            for (int a = 0; a < num_of_city; ++a) {
                 is_end = true;
-                for (int b = a + 1; b < num_of_city; ++b) {
+                for (int b = 0; b < num_of_city; ++b) {
                     if (one_move(a, b, points, num_of_city)) {
                         is_end = false;
                     }
@@ -228,8 +275,21 @@ public:
             ++count;
             for (int a = 1; a < num_of_city; ++a) {
                 is_end = true;
-                for (int b = a + 1; b < num_of_city; ++b) {
+                for (int b = 1; b < num_of_city; ++b) {
                     if (two_move(a, b, points, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+        }
+
+        while (!is_end & count < 5) {
+            ++count;
+            for (int a = 1; a < num_of_city; ++a) {
+                is_end = true;
+                for (int b = a + 1; b < num_of_city; ++b) {
+                    ++count;
+                    if (twoOpt(a, b, points, num_of_city)) {
                         is_end = false;
                     }
                 }

@@ -83,48 +83,44 @@ struct GeneticAlgorithm {
     void client(int start, int end)
     {
 
-        //ソケットの生成
-        int sockfd = socket(AF_INET, SOCK_STREAM, 0);              //アドレスドメイン, ソケットタイプ, プロトコル
-        if (sockfd < 0) {                                          //エラー処理
-            std::cout << "Error socket:" << std::strerror(errno);  //標準出力
-            exit(1);                                               //異常終了
+        int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) {
+            std::cout << "Error socket:" << std::strerror(errno);
+            client(start, end);
+            return;
         }
 
-        //アドレスの生成
-        struct sockaddr_in addr;                        //接続先の情報用の構造体(ipv4)
-        memset(&addr, 0, sizeof(struct sockaddr_in));   // memsetで初期化
-        addr.sin_family = AF_INET;                      //アドレスファミリ(ipv4)
-        addr.sin_port = htons(1234);                    //ポート番号,htons()関数は16bitホストバイトオーダーをネットワークバイトオーダーに変換
-        addr.sin_addr.s_addr = inet_addr("127.0.0.1");  // IPアドレス,inet_addr()関数はアドレスの翻訳
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(struct sockaddr_in));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(1234);
+        addr.sin_addr.s_addr = inet_addr("192.168.1.5");
 
-        //ソケット接続要求
-        connect(sockfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));  //ソケット, アドレスポインタ, アドレスサイズ
+        connect(sockfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
 
         if (start == -1) {
             int num = -1;
-            send(sockfd, &num, sizeof(int), 0);  //送信
+            send(sockfd, &num, sizeof(int), 0);  // serverに閉じてOKと送信
             return;
         }
 
         int num = end - start;
-        send(sockfd, &num, sizeof(int), 0);  //送信
+        send(sockfd, &num, sizeof(int), 0);
 
-        //データ送信
+        //optimizeしてほしいデータを送信
         for (int i = start; i < end; ++i) {
-            //usleep(10000);
-            send(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);  //送信
+            send(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);
             bool is;
-            recv(sockfd, &is, sizeof(bool), 0);
+            recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
         }
 
-        //データ受信
+        //optimize後のデータを受信
         for (int i = start; i < end; ++i) {
-            recv(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);  //送信
+            recv(sockfd, &unit_next.at(i), sizeof(Chromosome<NUM_OF_CITY>), 0);
             bool is;
             send(sockfd, &is, sizeof(bool), 0);
         }
 
-        //ソケットクローズ
         close(sockfd);
     }
 
