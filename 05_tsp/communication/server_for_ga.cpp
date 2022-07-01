@@ -91,6 +91,10 @@ int main()
             break;
         }
 
+        bool is_final;
+
+        recv(connect, &is_final, sizeof(bool), 0);
+
         //受信
         std::vector<Chromosome<NUM_OF_CITY>*> chromos;
         int new_num = num;
@@ -117,17 +121,31 @@ int main()
         }
         num = new_num;
 
+
         //optimize
         int th_num = 7;
+
+        std::vector<double> min_distances(th_num);  //for is_final
+
         auto optimizePartly = [&](int index) {
             int start = index * num / th_num;
             int end = (index + 1) * num / th_num;
-            for (int i = start; i < end; ++i) {
-                chromos[i]->calcTotalDistance(points);
-                chromos[i]->optimize(points, points.size());
-                chromos[i]->calcFitness(points.size());
+            if (is_final) {
+                for (int i = start; i < end; ++i) {
+                    chromos[i]->calcTotalDistance(points);
+                    chromos[i]->optimize(points, points.size());
+                    chromos[i]->calcFitness(points.size());
+                }
+            } else {
+                double min_distance = 100000000;
+                for (int i = start; i < end; ++i) {
+                    double distance_now = chromos[i]->optimizeFinaly(points, points.size());
+                    min_distance = std::min(min_distance, distance_now);
+                }
+                min_distances.at(index) = min_distance;
             }
         };
+
         auto optimizePartly1 = [&]() { optimizePartly(1); };
         auto optimizePartly2 = [&]() { optimizePartly(2); };
         auto optimizePartly3 = [&]() { optimizePartly(3); };
@@ -150,21 +168,33 @@ int main()
         th5.join();
         th6.join();
 
-        for (int i = 0; i < num; ++i) {
-            for (int div = 0; div < DIV; ++div) {
-                bool is = false;
-                int count = 0;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
-                while (!is) {
-                    ++count;
-                    if (count > 10) {
-                        div = DIV;
-                        std::cout << "skip " << i << std::endl;
-                        break;
+        if (is_final) {
+            auto min_distance = min_distances.at(0);
+            for (auto d : min_distances) {
+                min_distance = std::min(min_distance, d);
+            }
+            bool is = false;
+            while (!is) {
+                send(connect, &min_distance, sizeof(double), 0);
+                recv(connect, &is, sizeof(bool), 0);  //受信したら次を送ってOK
+            }
+        } else {
+            for (int i = 0; i < num; ++i) {
+                for (int div = 0; div < DIV; ++div) {
+                    bool is = false;
+                    int count = 0;
+                    auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
+                    auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
+                    while (!is) {
+                        ++count;
+                        if (count > 10) {
+                            div = DIV;
+                            std::cout << "skip " << i << std::endl;
+                            break;
+                        }
+                        send(connect, (void*)((char*)chromos.at(i) + st), ed - st, 0);
+                        recv(connect, &is, sizeof(bool), 0);  //受信したら次を送ってOK
                     }
-                    send(connect, (void*)((char*)chromos.at(i) + st), ed - st, 0);
-                    recv(connect, &is, sizeof(bool), 0);  //受信したら次を送ってOK
                 }
             }
         }

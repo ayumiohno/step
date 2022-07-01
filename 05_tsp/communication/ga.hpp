@@ -5,6 +5,7 @@
 #include "tsp.hpp"
 #include <algorithm>
 #include <arpa/inet.h>  //バイトオーダの変換に利用
+#include <array>
 #include <assert.h>
 #include <cstring>
 #include <iostream>
@@ -94,13 +95,13 @@ struct GeneticAlgorithm {
         return min_distance;
     }
 
-    void client(int start, int end)
+    void client(int start, int end, bool is_final)
     {
 
         int sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0) {
             std::cout << "Error socket:" << std::strerror(errno);
-            client(start, end);
+            client(start, end, is_final);
             return;
         }
 
@@ -121,60 +122,82 @@ struct GeneticAlgorithm {
         int num = end - start;
         send(sockfd, &num, sizeof(int), 0);
 
-        //optimizeしてほしいデータを送信
-        std::cerr << "start send" << std::endl;
-        for (int i = start; i < end; ++i) {
-            for (int div = 0; div < DIV; ++div) {
-                bool is = false;
-                int count = 0;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
-                while (!is) {
-                    ++count;
-                    if (count > 10) {
-                        div = DIV;
-                        --num;
-                        break;
-                    }
-                    assert(unit_next.at(i).total_distance > 1000);
-                    auto size = send(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0);
-                    recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
-                }
-            }
-        }
-        std::cerr << "end send" << std::endl;
+        send(sockfd, &is_final, sizeof(bool), 0);
 
-        //optimize後のデータを受信
-        std::cerr << "start receive" << std::endl;
-        for (int i = start; i < start + num; ++i) {
-            for (int div = 0; div < DIV; ++div) {
-                bool is = false;
-                int count = 0;
-                auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
-                auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
-                while (!is) {
-                    ++count;
-                    if (count > 10) {
-                        div = 0;
-                        --num;
-                        std::cout << "skip " << i << std::endl;
-                        break;
+        //optimizeしてほしいデータを送信
+        auto sendUnit = [&](std::vector<Chromosome<NUM_OF_CITY>>& unit) {
+            std::cerr << "start send" << std::endl;
+            for (int i = start; i < end; ++i) {
+                for (int div = 0; div < DIV; ++div) {
+                    bool is = false;
+                    int count = 0;
+                    auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
+                    auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
+                    while (!is) {
+                        ++count;
+                        if (count > 10) {
+                            div = DIV;
+                            --num;
+                            break;
+                        }
+                        assert(unit.at(i).total_distance > 1000);
+                        send(sockfd, (void*)((char*)&unit.at(i) + st), ed - st, 0);
+                        recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
                     }
-                    is = recv(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0) == ed - st;
-                    send(sockfd, &is, sizeof(bool), 0);
                 }
             }
+            std::cerr << "end send" << std::endl;
+        };
+
+
+        if (!is_final) {
+            sendUnit(unit_next);
+            //optimize後のデータを受信
+            std::cerr << "start receive" << std::endl;
+            for (int i = start; i < start + num; ++i) {
+                for (int div = 0; div < DIV; ++div) {
+                    bool is = false;
+                    int count = 0;
+                    auto st = sizeof(Chromosome<NUM_OF_CITY>) * div / DIV;
+                    auto ed = sizeof(Chromosome<NUM_OF_CITY>) * (div + 1) / DIV;
+                    while (!is) {
+                        ++count;
+                        if (count > 10) {
+                            div = 0;
+                            --num;
+                            std::cout << "skip " << i << std::endl;
+                            break;
+                        }
+                        is = recv(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0) == ed - st;
+                        send(sockfd, &is, sizeof(bool), 0);
+                    }
+                }
+            }
+            std::cerr << "end receive" << std::endl;
+            for (int i = start + num; i < end; ++i) {
+                unit_next.at(i) = best_chromosome;
+            }
+        } else {
+            sendUnit(unit_now);
+            bool is = false;
+            while (!is) {
+                is = recv(sockfd, &min_distances[6], sizeof(double), 0) == sizeof(double);
+                send(sockfd, &is, sizeof(bool), 0);
+            }
+            std::cerr << "end receive" << std::endl;
         }
-        for (int i = start + num; i < end; ++i) {
-            unit_next.at(i) = best_chromosome;
-        }
-        std::cerr << "end receive" << std::endl;
+
         close(sockfd);
     }
 
     void optimizePartlyByServer(int part_index_s, int part_index_e, int parts_num)
     {
-        client(unit_next.size() * part_index_s / parts_num, unit_next.size() * (part_index_e + 1) / parts_num);
+        client(unit_next.size() * part_index_s / parts_num, unit_next.size() * (part_index_e + 1) / parts_num, false);
+    }
+
+    void optimizePartlyByServerFinaly(int part_index_s, int part_index_e, int parts_num)
+    {
+        client(unit_now.size() * part_index_s / parts_num, unit_now.size() * (part_index_e + 1) / parts_num, true);
     }
 
     void optimizeUnitNext()
@@ -314,15 +337,15 @@ struct GeneticAlgorithm {
             selection();
             std::cout << best_chromosome.total_distance << std::endl;
         }
-        client(-1, -1);
 
-        std::vector<double> min_distances(6);
-        auto optimizeFinaly0 = [&]() { min_distances.at(0) = optimizePartlyFinaly(0, 6); };
-        auto optimizeFinaly1 = [&]() { min_distances.at(1) = optimizePartlyFinaly(1, 6); };
-        auto optimizeFinaly2 = [&]() { min_distances.at(2) = optimizePartlyFinaly(2, 6); };
-        auto optimizeFinaly3 = [&]() { min_distances.at(3) = optimizePartlyFinaly(3, 6); };
-        auto optimizeFinaly4 = [&]() { min_distances.at(4) = optimizePartlyFinaly(4, 6); };
-        auto optimizeFinaly5 = [&]() { min_distances.at(5) = optimizePartlyFinaly(5, 6); };
+        auto optimizeFinaly0 = [&]() { min_distances.at(0) = optimizePartlyFinaly(0, 15); };
+        auto optimizeFinaly1 = [&]() { min_distances.at(1) = optimizePartlyFinaly(1, 15); };
+        auto optimizeFinaly2 = [&]() { min_distances.at(2) = optimizePartlyFinaly(2, 15); };
+        auto optimizeFinaly3 = [&]() { min_distances.at(3) = optimizePartlyFinaly(3, 15); };
+        auto optimizeFinaly4 = [&]() { min_distances.at(4) = optimizePartlyFinaly(4, 15); };
+        auto optimizeFinaly5 = [&]() { min_distances.at(5) = optimizePartlyFinaly(5, 15); };
+
+        optimizePartlyByServerFinaly(6, 14, 15);
 
         std::thread th0(optimizeFinaly0);
         std::thread th1(optimizeFinaly1);
@@ -331,6 +354,7 @@ struct GeneticAlgorithm {
         std::thread th4(optimizeFinaly4);
         std::thread th5(optimizeFinaly5);
 
+
         th0.join();
         th1.join();
         th2.join();
@@ -338,10 +362,13 @@ struct GeneticAlgorithm {
         th4.join();
         th5.join();
 
+        client(-1, -1, false);
+
         auto min_distance = min_distances.at(0);
         for (auto d : min_distances) {
             min_distance = std::min(min_distance, d);
         }
+
         return min_distance;
     }
 
@@ -353,6 +380,8 @@ struct GeneticAlgorithm {
 
     std::vector<Point> points;
     int num_of_city;
+
+    std::array<double, 7> min_distances;
 };
 
 

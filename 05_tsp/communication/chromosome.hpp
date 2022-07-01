@@ -244,7 +244,7 @@ public:
     {
         bool is_end = false;
         int count = 0;
-        while (!is_end & count < 5) {
+        while (!is_end && count < 5) {
             ++count;
             for (int a = 1; a < num_of_city; ++a) {
                 is_end = true;
@@ -283,7 +283,7 @@ public:
             }
         }
 
-        while (!is_end & count < 5) {
+        while (!is_end && count < 5) {
             ++count;
             for (int a = 1; a < num_of_city; ++a) {
                 is_end = true;
