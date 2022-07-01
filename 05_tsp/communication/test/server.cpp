@@ -1,4 +1,4 @@
-#include "framework.hpp"
+#include "../chromosome.hpp"
 #include <arpa/inet.h>  //バイトオーダの変換に利用
 #include <cstring>
 #include <iostream>      //標準入出力

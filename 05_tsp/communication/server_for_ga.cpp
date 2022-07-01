@@ -130,7 +130,7 @@ int main()
         auto optimizePartly = [&](int index) {
             int start = index * num / th_num;
             int end = (index + 1) * num / th_num;
-            if (is_final) {
+            if (!is_final) {
                 for (int i = start; i < end; ++i) {
                     chromos[i]->calcTotalDistance(points);
                     chromos[i]->optimize(points, points.size());
