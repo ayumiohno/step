@@ -138,8 +138,9 @@ int main()
                 }
             } else {
                 double min_distance = 100000000;
-                for (int i = start; i < end; ++i) {
+                for (int i = end - 1; i >= start; --i) {
                     double distance_now = chromos[i]->optimizeFinaly(points, points.size());
+                    std::cout << distance_now << std::endl;
                     min_distance = std::min(min_distance, distance_now);
                 }
                 min_distances.at(index) = min_distance;

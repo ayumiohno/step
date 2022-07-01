@@ -87,7 +87,7 @@ struct GeneticAlgorithm {
     double optimizePartlyFinaly(int part_index, int parts_num)
     {
         double min_distance = 100000000;
-        for (int i = unit_now.size() * part_index / parts_num; i < unit_now.size() * (part_index + 1) / parts_num; i++) {
+        for (int i = unit_now.size() * (part_index + 1) / parts_num - 1; i >= unit_now.size() * part_index / parts_num; i--) {
             auto distance_now = unit_now.at(i).optimizeFinaly(points, num_of_city);
             std::cout << min_distance << std::endl;
             min_distance = std::min(min_distance, distance_now);
