@@ -15,4 +15,5 @@ int main()
     std::cout << sizeof(Chromosome<128>) << std::endl;
     std::cout << sizeof(Chromosome<512>) << std::endl;
     std::cout << sizeof(Chromosome<2048>) << std::endl;
+    std::cout << sizeof(Chromosome<8192>) << std::endl;
 }

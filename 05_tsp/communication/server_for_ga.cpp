@@ -12,7 +12,8 @@
 #include <unistd.h>
 #include <vector>
 
-constexpr int DIV = 16;
+constexpr int DIV = 16;  // ~4 : 1, 5 : 4, 6 : 16, 7 : 64
+                         // 1024bite前後なら送信ミスが少ない
 constexpr int FILE_NUM = 6;
 constexpr std::array<int, 8> NUMS = {5, 8, 16, 64, 128, 512, 2048, 8192};
 constexpr int NUM_OF_CITY = NUMS.at(FILE_NUM);
