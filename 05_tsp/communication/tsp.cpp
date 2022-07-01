@@ -1,13 +1,13 @@
 #include "point.hpp"
 #include "tsp.hpp"
 #include <algorithm>
+#include <assert.h>
+#include <cmath>
 #include <iostream>
 #include <random>
 #include <set>
 #include <utility>
 #include <vector>
-#include <cmath>
-#include <assert.h>
 
 double getDistance(const std::vector<Point>& points, int i, int j, int num_of_dots)
 {
@@ -16,17 +16,17 @@ double getDistance(const std::vector<Point>& points, int i, int j, int num_of_do
     return std::sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
 }
 
-// p1-1        p1       p1-1        p1 
+// p1-1        p1       p1-1        p1
 //   * -  -  - *         *  -     -  *
 //             |    =>         -     |
 //   * -  -  - *         *  -     -  *
 // p2+1        p2       p2+1        p2
 bool reverseSubPath(const int& swap1, const int& swap2,
-    std::vector<Point>& points, 
-    double& min_length, const int& num_of_dots) 
+    std::vector<Point>& points,
+    double& min_length, const int& num_of_dots)
 {
     auto swap_pair = std::minmax(swap1, swap2);
-    if(swap_pair.second == swap_pair.first || swap_pair.first <= 0 || swap_pair.second >= num_of_dots - 1){
+    if (swap_pair.second == swap_pair.first || swap_pair.first <= 0 || swap_pair.second >= num_of_dots - 1) {
         return false;
     }
     double length_diff = 0;  //入れ替えた後の長さ合計 - 入れ替えた後の長さ合計
@@ -44,13 +44,13 @@ bool reverseSubPath(const int& swap1, const int& swap2,
     return false;
 }
 
-//   ---base - 1 -            - base + 1  ---            --- base - 1      ---     base + 1   ---                
+//   ---base - 1 -            - base + 1  ---            --- base - 1      ---     base + 1   ---
 //                 -         -
 //                   - base -                     =>                     - base -
 //                                                                      -        -
-//   ---  i - 1        ---         i      ---            ---   i - 1   -          -  i        ---   
+//   ---  i - 1        ---         i      ---            ---   i - 1   -          -  i        ---
 
-bool movePoint(const int& base, 
+bool movePoint(const int& base,
     std::vector<Point>& points,
     double& min_length, const int& num_of_dots)
 {
@@ -67,13 +67,13 @@ bool movePoint(const int& base,
         length_diff -= getDistance(points, base, base - 1, num_of_dots);
         length_diff -= getDistance(points, base, base + 1, num_of_dots);
         length_diff -= getDistance(points, i - 1, i, num_of_dots);
-        
+
         if (length_diff < min_length_diff) {
             i_save = i;
             min_length_diff = length_diff;
         }
     }
-    if (min_length_diff < 0 ) {
+    if (min_length_diff < 0) {
         min_length += min_length_diff;
         auto base_point = points.at(base);
         points.erase(points.begin() + base);
@@ -86,12 +86,12 @@ bool movePoint(const int& base,
     return false;
 }
 
-//   ---base - 1 -                    - base + 2---     --- base - 1         ---           base + 2 ---       --- base - 1      ---      base + 2 ---              
+//   ---base - 1 -                    - base + 2---     --- base - 1         ---           base + 2 ---       --- base - 1      ---      base + 2 ---
 //               -                    -
 //               - base --- base + 1  -              =>               - base --- base + 1 -                or           - base - base + 1 -
-//                                                                    -                   -                             -                 -   
+//                                                                    -                   -                             -                 -
 //   ---  i - 1         ---                 i   ---     ---   i - 1   -                   -    i    ---       ---   i   -                 - i - 1 ---
-bool move2Points(const int& base, 
+bool move2Points(const int& base,
     std::vector<Point>& points,
     double& min_length, const int& num_of_dots)
 {
@@ -132,12 +132,12 @@ bool move2Points(const int& base,
             }
         }
     }
-    if (min_length_diff < 0 ) {
+    if (min_length_diff < 0) {
         min_length += min_length_diff;
         auto base_point1 = points.at(base);
         auto base_point2 = points.at((base + 1) % num_of_dots);
         int new_i;
-        if(base + 1 != num_of_dots){
+        if (base + 1 != num_of_dots) {
             points.erase(points.begin() + base + 1);
             points.erase(points.begin() + base);
             new_i = base < i_save ? i_save - 2 : i_save;
@@ -158,12 +158,12 @@ bool move2Points(const int& base,
     return false;
 }
 
-//   ---base - 1 -                    - base + 3---     --- base - 1         ---           base + 2 ---       --- base - 1      ---      base + 2 ---              
+//   ---base - 1 -                    - base + 3---     --- base - 1         ---           base + 2 ---       --- base - 1      ---      base + 2 ---
 //               -                    -
 //               - b  - b + 1 - b + 2  -              =>               - base --- base + 1 -                or           - base - base + 1 -
-//                                                                    -                   -                             -                 -   
+//                                                                    -                   -                             -                 -
 //   ---  i - 1         ---                 i   ---     ---   i - 1   -                   -    i    ---       ---   i   -                 - i - 1 ---
-bool move3Points(const int& base, 
+bool move3Points(const int& base,
     std::vector<Point>& points,
     double& min_length, const int& num_of_dots)
 {
@@ -174,7 +174,7 @@ bool move3Points(const int& base,
         double length_diff = 0;  //入れ替えた後の長さ合計 - 入れ替えた後の長さ合計
         double length_diff1 = 0;
         double length_diff2 = 0;
-        if (base == i || (base - i + 1) % num_of_dots == 0 ||(base + 1 - i + 1) % num_of_dots == 0 || (base + 2 - i + 1) % num_of_dots == 0) {
+        if (base == i || (base - i + 1) % num_of_dots == 0 || (base + 1 - i + 1) % num_of_dots == 0 || (base + 2 - i + 1) % num_of_dots == 0) {
             continue;
         }
 
@@ -204,24 +204,24 @@ bool move3Points(const int& base,
             }
         }
     }
-    if (min_length_diff < 0 ) {
-        std::cerr << "3-move " << min_length_diff << std::endl;
+    if (min_length_diff < 0) {
+        //std::cerr << "3-move " << min_length_diff << std::endl;
         min_length += min_length_diff;
         auto base_point1 = points.at(base);
         auto base_point2 = points.at((base + 1) % num_of_dots);
         auto base_point3 = points.at((base + 2) % num_of_dots);
         int new_i;
-        if(base + 1 == num_of_dots){
+        if (base + 1 == num_of_dots) {
             points.erase(points.begin() + num_of_dots - 1);
             points.erase(points.begin());
             points.erase(points.begin() + 1);
             new_i = i_save - 2;
-        } else if(base + 2 == num_of_dots) {
+        } else if (base + 2 == num_of_dots) {
             points.erase(points.begin() + num_of_dots - 2);
             points.erase(points.begin() + num_of_dots - 1);
             points.erase(points.begin());
             new_i = i_save - 1;
-        }else{
+        } else {
             points.erase(points.begin() + base + 2);
             points.erase(points.begin() + base + 1);
             points.erase(points.begin() + base);
@@ -241,7 +241,7 @@ bool move3Points(const int& base,
     return false;
 }
 
-bool move4Points(const int& base, 
+bool move4Points(const int& base,
     std::vector<Point>& points,
     double& min_length, const int& num_of_dots)
 {
@@ -252,7 +252,7 @@ bool move4Points(const int& base,
         double length_diff = 0;  //入れ替えた後の長さ合計 - 入れ替えた後の長さ合計
         double length_diff1 = 0;
         double length_diff2 = 0;
-        if (base == i || (base - i + 1) % num_of_dots == 0 ||(base + 1 - i + 1) % num_of_dots == 0 
+        if (base == i || (base - i + 1) % num_of_dots == 0 || (base + 1 - i + 1) % num_of_dots == 0
             || (base + 2 - i + 1) % num_of_dots == 0 || (base + 3 - i + 1) % num_of_dots == 0) {
             continue;
         }
@@ -283,27 +283,27 @@ bool move4Points(const int& base,
             }
         }
     }
-    if (min_length_diff < 0 ) {
-        std::cerr << "4-move " << min_length_diff << std::endl;
+    if (min_length_diff < 0) {
+        //std::cerr << "4-move " << min_length_diff << std::endl;
         min_length += min_length_diff;
         auto base_point1 = points.at(base);
         auto base_point2 = points.at((base + 1) % num_of_dots);
         auto base_point3 = points.at((base + 2) % num_of_dots);
         auto base_point4 = points.at((base + 3) % num_of_dots);
         int new_i;
-        if(base + 1 == num_of_dots){
+        if (base + 1 == num_of_dots) {
             points.erase(points.begin() + num_of_dots - 1);
             points.erase(points.begin());
             points.erase(points.begin() + 1);
             points.erase(points.begin() + 2);
             new_i = i_save - 3;
-        } else if(base + 2 == num_of_dots) {
+        } else if (base + 2 == num_of_dots) {
             points.erase(points.begin() + num_of_dots - 2);
             points.erase(points.begin() + num_of_dots - 1);
             points.erase(points.begin());
             points.erase(points.begin() + 1);
             new_i = i_save - 2;
-        } else if(base + 3 == num_of_dots){
+        } else if (base + 3 == num_of_dots) {
             points.erase(points.begin() + num_of_dots - 3);
             points.erase(points.begin() + num_of_dots - 2);
             points.erase(points.begin() + num_of_dots - 1);
@@ -333,10 +333,10 @@ bool move4Points(const int& base,
 }
 
 bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
-    std::vector<Point>& points, 
+    std::vector<Point>& points,
     double& min_length, const int& num_of_dots)
 {
-    if(swap1 + 1 == swap2 || swap2 + 1 == swap3 || (swap3 + 1) % num_of_dots == swap1){
+    if (swap1 + 1 == swap2 || swap2 + 1 == swap3 || (swap3 + 1) % num_of_dots == swap1) {
         return false;
     }
 
@@ -351,7 +351,7 @@ bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
     int dir = 1;
 
     length_diff1 += getDistance(points, swap1, swap3 - 1, num_of_dots);
-    length_diff1 += getDistance(points, swap2 - 1, swap1 -1, num_of_dots);
+    length_diff1 += getDistance(points, swap2 - 1, swap1 - 1, num_of_dots);
     length_diff1 += getDistance(points, swap2, swap3, num_of_dots);
 
     length_diff = length_diff1;
@@ -360,7 +360,7 @@ bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
     length_diff2 += getDistance(points, swap2 - 1, swap3, num_of_dots);
     length_diff2 += getDistance(points, swap3 - 1, swap1 - 1, num_of_dots);
 
-    if(length_diff2 < length_diff){
+    if (length_diff2 < length_diff) {
         dir = 2;
         length_diff = length_diff2;
     }
@@ -369,7 +369,7 @@ bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
     length_diff3 += getDistance(points, swap2 - 1, swap3 - 1, num_of_dots);
     length_diff3 += getDistance(points, swap2, swap1 - 1, num_of_dots);
 
-    if(length_diff3 < length_diff){
+    if (length_diff3 < length_diff) {
         dir = 3;
         length_diff = length_diff3;
     }
@@ -378,7 +378,7 @@ bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
     length_diff4 += getDistance(points, swap2, swap1 - 1, num_of_dots);
     length_diff4 += getDistance(points, swap3, swap2 - 1, num_of_dots);
 
-    if(length_diff4 < length_diff){
+    if (length_diff4 < length_diff) {
         dir = 4;
         length_diff = length_diff4;
     }
@@ -388,59 +388,59 @@ bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
     length_diff -= getDistance(points, swap3 - 1, swap3, num_of_dots);
 
     if (length_diff < 0) {  //入れ替えると長さが短くなる場合
-        std::cerr << "3-opt " << length_diff << std::endl;
+        //std::cerr << "3-opt " << length_diff << std::endl;
         min_length += length_diff;
         std::vector<Point> new_vec;
-        if(dir == 1){
-            for(int i = 0; i <= swap1 - 1; ++i){
+        if (dir == 1) {
+            for (int i = 0; i <= swap1 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap2 - 1; i >= swap1; --i){
+            for (int i = swap2 - 1; i >= swap1; --i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap3 - 1; i >= swap2; --i){
+            for (int i = swap3 - 1; i >= swap2; --i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap3; i < num_of_dots; ++i){
+            for (int i = swap3; i < num_of_dots; ++i) {
                 new_vec.push_back(points.at(i));
             }
-        }else if(dir == 2){
-            for(int i = 0; i <= swap1 - 1; ++i){
+        } else if (dir == 2) {
+            for (int i = 0; i <= swap1 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap3 - 1; i >= swap2; --i){
+            for (int i = swap3 - 1; i >= swap2; --i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap1; i <= swap2 - 1; ++i){
+            for (int i = swap1; i <= swap2 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap3; i < num_of_dots; ++i){
+            for (int i = swap3; i < num_of_dots; ++i) {
                 new_vec.push_back(points.at(i));
             }
-        }else if(dir == 3){
-            for(int i = 0; i <= swap1 - 1; ++i){
+        } else if (dir == 3) {
+            for (int i = 0; i <= swap1 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap2; i <= swap3 - 1; ++i){
+            for (int i = swap2; i <= swap3 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap2 - 1; i >= swap1; --i){
+            for (int i = swap2 - 1; i >= swap1; --i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap3; i < num_of_dots; ++i){
+            for (int i = swap3; i < num_of_dots; ++i) {
                 new_vec.push_back(points.at(i));
             }
-        }else if(dir == 4){
-            for(int i = 0; i <= swap1 - 1; ++i){
+        } else if (dir == 4) {
+            for (int i = 0; i <= swap1 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap2; i <= swap3 - 1; ++i){
+            for (int i = swap2; i <= swap3 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap1; i <= swap2 - 1; ++i){
+            for (int i = swap1; i <= swap2 - 1; ++i) {
                 new_vec.push_back(points.at(i));
             }
-            for(int i = swap3; i < num_of_dots; ++i){
+            for (int i = swap3; i < num_of_dots; ++i) {
                 new_vec.push_back(points.at(i));
             }
         }
@@ -449,5 +449,4 @@ bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
         return true;
     }
     return false;
-
-} 
+}

@@ -83,6 +83,17 @@ struct GeneticAlgorithm {
         };
     }
 
+    double optimizePartlyFinaly(int part_index, int parts_num)
+    {
+        double min_distance = 100000000;
+        for (int i = unit_now.size() * part_index / parts_num; i < unit_now.size() * (part_index + 1) / parts_num; i++) {
+            auto distance_now = unit_now.at(i).optimizeFinaly(points, num_of_city);
+            std::cout << min_distance << std::endl;
+            min_distance = std::min(min_distance, distance_now);
+        };
+        return min_distance;
+    }
+
     void client(int start, int end)
     {
 
@@ -293,6 +304,7 @@ struct GeneticAlgorithm {
         }
     }
 
+
     double evolution()
     {
         init();
@@ -303,105 +315,34 @@ struct GeneticAlgorithm {
             std::cout << best_chromosome.total_distance << std::endl;
         }
         client(-1, -1);
-        std::vector<Point> best_points;
-        double best_distance = best_chromosome.total_distance;
-        std::cout << "best_distance: " << best_distance << std::endl;
-        for (auto gene : best_chromosome.chromosome) {
-            best_points.push_back(points.at(gene.codon1));
-        }
-        bool is_end = false;
-        int count = 0;
-        while (!is_end && count < 10000000) {
-            for (int a = 1; a < num_of_city; ++a) {
-                is_end = true;
-                for (int b = a + 1; b < num_of_city; ++b) {
-                    ++count;
-                    if (reverseSubPath(a, b, best_points, best_distance, num_of_city)) {
-                        is_end = false;
-                    }
-                }
-            }
-        }
-        std::cerr << is_end << std::endl;
-        for (int j = 0; j < 3; ++j) {
-            std::cerr << j << std::endl;
-            count = 0;
-            is_end = false;
-            while (!is_end && count < 10000) {
-                is_end = true;
-                for (int base = 0; base < num_of_city; ++base) {
-                    ++count;
-                    if (movePoint(base, best_points, best_distance, num_of_city)) {
-                        is_end = false;
-                    }
-                }
-            }
 
-            count = 0;
-            is_end = false;
-            while (!is_end && count < 10000) {
-                is_end = true;
-                for (int base = 1; base < num_of_city; ++base) {
-                    ++count;
-                    if (move2Points(base, best_points, best_distance, num_of_city)) {
-                        is_end = false;
-                    }
-                }
-            }
-            count = 0;
-            is_end = false;
-            while (!is_end && count < 10000) {
-                is_end = true;
-                for (int base = 1; base < num_of_city; ++base) {
-                    ++count;
-                    if (move3Points(base, best_points, best_distance, num_of_city)) {
-                        is_end = false;
-                    }
-                }
-            }
-            count = 0;
-            is_end = false;
-            while (!is_end && count < 10000) {
-                is_end = true;
-                for (int base = 1; base < num_of_city; ++base) {
-                    ++count;
-                    if (move4Points(base, best_points, best_distance, num_of_city)) {
-                        is_end = false;
-                    }
-                }
-            }
-            count = 0;
-            is_end = false;
-            while (!is_end && count < 10000) {
-                is_end = true;
-                for (int a = 1; a < num_of_city; ++a) {
-                    for (int b = a + 1; b < num_of_city; ++b) {
-                        ++count;
-                        if (reverseSubPath(a, b, best_points, best_distance, num_of_city)) {
-                            is_end = false;
-                        }
-                    }
-                }
-            }
+        std::vector<double> min_distances(6);
+        auto optimizeFinaly0 = [&]() { min_distances.at(0) = optimizePartlyFinaly(0, 6); };
+        auto optimizeFinaly1 = [&]() { min_distances.at(1) = optimizePartlyFinaly(1, 6); };
+        auto optimizeFinaly2 = [&]() { min_distances.at(2) = optimizePartlyFinaly(2, 6); };
+        auto optimizeFinaly3 = [&]() { min_distances.at(3) = optimizePartlyFinaly(3, 6); };
+        auto optimizeFinaly4 = [&]() { min_distances.at(4) = optimizePartlyFinaly(4, 6); };
+        auto optimizeFinaly5 = [&]() { min_distances.at(5) = optimizePartlyFinaly(5, 6); };
 
-            count = 0;
-            is_end = false;
-            while (!is_end && count < 1) {
-                is_end = true;
-                for (int a = 0; a < num_of_city; ++a) {
-                    for (int b = a + 1; b < num_of_city; ++b) {
-                        for (int c = b + 1; c < num_of_city; ++c) {
-                            ++count;
-                            if (reverseSubPath3(a, b, c, best_points, best_distance,
-                                    num_of_city)) {
-                                is_end = false;
-                            }
-                        }
-                    }
-                }
-            }
+        std::thread th0(optimizeFinaly0);
+        std::thread th1(optimizeFinaly1);
+        std::thread th2(optimizeFinaly2);
+        std::thread th3(optimizeFinaly3);
+        std::thread th4(optimizeFinaly4);
+        std::thread th5(optimizeFinaly5);
+
+        th0.join();
+        th1.join();
+        th2.join();
+        th3.join();
+        th4.join();
+        th5.join();
+
+        auto min_distance = min_distances.at(0);
+        for (auto d : min_distances) {
+            min_distance = std::min(min_distance, d);
         }
-        return best_distance;
+        return min_distance;
     }
 
 

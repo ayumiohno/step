@@ -32,5 +32,5 @@ int main()
         file.close();
     }
     GeneticAlgorithm<NUM_OF_CITY> GA{points, 100, 1000, 15, 15};
-    std::cout << GA.evolution() << std::endl;
+    std::cout << "best: " << GA.evolution() << std::endl;
 }

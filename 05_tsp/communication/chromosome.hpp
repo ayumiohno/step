@@ -156,7 +156,7 @@ private:
 
     //     target-1 --- target ---  target+1 ---             ---  target  ---                         --- target ---
     //       a | b       b | c       c | d                         a | d                                   a | d
-    //                                       =>                                        or        
+    //                                       =>                                        or
     //          ---   insert_pos   ---                      --- insert_pos ---                      ---  insert_pos  ---
     //                   d | e                          d | b      b | c     c | e                d | c    c | b    b | e
 
@@ -174,7 +174,7 @@ private:
         length_diff -= getDistance(points, chromosome.at((target + 1) % num_of_city).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
         length_diff -= getDistance(points, chromosome.at(insert_pos).codon1, chromosome.at(insert_pos).codon2, num_of_city);
         length_diff += getDistance(points, chromosome.at((target - 1 + num_of_city) % num_of_city).codon1, chromosome.at((target + 1) % num_of_city).codon2, num_of_city);
-        
+
         length_diff1 += getDistance(points, chromosome.at(target).codon1, chromosome.at(insert_pos).codon1, num_of_city);
         length_diff1 += getDistance(points, chromosome.at(target).codon2, chromosome.at(insert_pos).codon2, num_of_city);
 
@@ -191,13 +191,13 @@ private:
             }
             std::cout << std::endl;*/
 
-            if(length_diff2 < length_diff1){
+            if (length_diff2 < length_diff1) {
                 chromosome.at(target).inverse();
                 chromosome.at((target - 1 + num_of_city) % num_of_city).codon2 = chromosome.at(target).codon1;
             } else {
             }
             total_distance += length_diff1;
-            
+
             chromosome.at((target + 1) % num_of_city).codon1 = chromosome.at((target - 1 + num_of_city) % num_of_city).codon1;
             chromosome.at((target - 1 + num_of_city) % num_of_city).codon1 = chromosome.at(insert_pos).codon1;
             chromosome.at(insert_pos).codon1 = chromosome.at(target).codon2;
@@ -205,7 +205,7 @@ private:
             auto tar1 = chromosome.at((target - 1 + num_of_city) % num_of_city);
             auto tar2 = chromosome.at(target);
 
-            if (target == 0){
+            if (target == 0) {
                 for (int i = 0; i + 1 <= insert_pos - 1; i++) {
                     chromosome.at(i) = chromosome.at(i + 1);
                 }
@@ -297,6 +297,105 @@ public:
         }
     }
 
+    double optimizeFinaly(std::vector<Point>& points, int num_of_city)
+    {
+        std::vector<Point> best_points;
+        double best_distance = total_distance;
+        for (auto gene : chromosome) {
+            best_points.push_back(points.at(gene.codon1));
+        }
+        bool is_end = false;
+        int count = 0;
+        while (!is_end && count < 10000000) {
+            for (int a = 1; a < num_of_city; ++a) {
+                is_end = true;
+                for (int b = a + 1; b < num_of_city; ++b) {
+                    ++count;
+                    if (reverseSubPath(a, b, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+        }
+        for (int j = 0; j < 3; ++j) {
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 0; base < num_of_city; ++base) {
+                    ++count;
+                    if (movePoint(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 1; base < num_of_city; ++base) {
+                    ++count;
+                    if (move2Points(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 1; base < num_of_city; ++base) {
+                    ++count;
+                    if (move3Points(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int base = 1; base < num_of_city; ++base) {
+                    ++count;
+                    if (move4Points(base, best_points, best_distance, num_of_city)) {
+                        is_end = false;
+                    }
+                }
+            }
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 10000) {
+                is_end = true;
+                for (int a = 1; a < num_of_city; ++a) {
+                    for (int b = a + 1; b < num_of_city; ++b) {
+                        ++count;
+                        if (reverseSubPath(a, b, best_points, best_distance, num_of_city)) {
+                            is_end = false;
+                        }
+                    }
+                }
+            }
+
+            count = 0;
+            is_end = false;
+            while (!is_end && count < 1) {
+                is_end = true;
+                for (int a = 0; a < num_of_city; ++a) {
+                    for (int b = a + 1; b < num_of_city; ++b) {
+                        for (int c = b + 1; c < num_of_city; ++c) {
+                            ++count;
+                            if (reverseSubPath3(a, b, c, best_points, best_distance,
+                                    num_of_city)) {
+                                is_end = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return best_distance;
+    }
 
     std::array<MacroGene, NUM_OF_CITY> chromosome;
     double total_distance;
