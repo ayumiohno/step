@@ -24,7 +24,7 @@ int seed = rd();
 std::default_random_engine eng(seed);
 std::uniform_int_distribution<int> distr(1, 1000000000);
 
-constexpr int DIV = 16;
+constexpr int DIV = 64;
 
 template <int NUM_OF_CITY>
 struct GeneticAlgorithm {
@@ -87,7 +87,8 @@ struct GeneticAlgorithm {
     double optimizePartlyFinaly(int part_index, int parts_num)
     {
         double min_distance = 100000000;
-        for (int i = unit_now.size() * (part_index + 1) / parts_num - 1; i >= unit_now.size() * part_index / parts_num; i--) {
+        //for (int i = unit_now.size() * (part_index + 1) / parts_num - 1; i >= unit_now.size() * part_index / parts_num; i--) {
+        for (int i = unit_now.size() * part_index / parts_num; i < unit_now.size() * (part_index + 1) / parts_num; i++) {
             auto distance_now = unit_now.at(i).optimizeFinaly(points, num_of_city);
             std::cout << min_distance << std::endl;
             min_distance = std::min(min_distance, distance_now);
@@ -203,12 +204,12 @@ struct GeneticAlgorithm {
     void optimizeUnitNext()
     {
         //auto optimizePartly0 = [&]() { optimizePartlyByServer(0, 0, 6); };
-        auto optimizePartly1 = [&]() { optimizePartly(8, 14); };
-        auto optimizePartly2 = [&]() { optimizePartly(9, 14); };
-        auto optimizePartly3 = [&]() { optimizePartly(10, 14); };
-        auto optimizePartly4 = [&]() { optimizePartly(11, 14); };
-        auto optimizePartly5 = [&]() { optimizePartly(12, 14); };
-        auto optimizePartly6 = [&]() { optimizePartly(13, 14); };
+        auto optimizePartly1 = [&]() { optimizePartly(11, 17); };
+        auto optimizePartly2 = [&]() { optimizePartly(12, 17); };
+        auto optimizePartly3 = [&]() { optimizePartly(13, 17); };
+        auto optimizePartly4 = [&]() { optimizePartly(14, 17); };
+        auto optimizePartly5 = [&]() { optimizePartly(15, 17); };
+        auto optimizePartly6 = [&]() { optimizePartly(16, 17); };
 
         std::thread th1(optimizePartly1);
         std::thread th2(optimizePartly2);
@@ -217,7 +218,7 @@ struct GeneticAlgorithm {
         std::thread th5(optimizePartly5);
         std::thread th6(optimizePartly6);
 
-        optimizePartlyByServer(0, 7, 14);
+        optimizePartlyByServer(0, 10, 17);
         //optimizePartly(0, 7);
 
         th1.join();
@@ -346,6 +347,7 @@ struct GeneticAlgorithm {
         auto optimizeFinaly5 = [&]() { min_distances.at(5) = optimizePartlyFinaly(5, 15); };
 
         optimizePartlyByServerFinaly(6, 14, 15);
+        client(-1, -1, false);
 
         std::thread th0(optimizeFinaly0);
         std::thread th1(optimizeFinaly1);
@@ -362,7 +364,6 @@ struct GeneticAlgorithm {
         th4.join();
         th5.join();
 
-        client(-1, -1, false);
 
         auto min_distance = min_distances.at(0);
         for (auto d : min_distances) {
