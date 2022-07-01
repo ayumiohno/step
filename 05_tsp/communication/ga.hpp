@@ -19,7 +19,8 @@
 #include <vector>
 
 std::random_device rd;
-std::default_random_engine eng(rd());
+int seed = rd();
+std::default_random_engine eng(seed);
 std::uniform_int_distribution<int> distr(1, 1000000000);
 
 constexpr int DIV = 16;
@@ -47,6 +48,7 @@ struct GeneticAlgorithm {
     void init()
     {
         // Chromosomeをrandomに生成
+        std::cout << "seed: " << seed << std::endl;
         std::vector<int> order;
         for (int i = 0; i < num_of_city; i++) {
             order.push_back(i);
@@ -109,6 +111,7 @@ struct GeneticAlgorithm {
         send(sockfd, &num, sizeof(int), 0);
 
         //optimizeしてほしいデータを送信
+        std::cerr << "start send" << std::endl;
         for (int i = start; i < end; ++i) {
             for (int div = 0; div < DIV; ++div) {
                 bool is = false;
@@ -119,21 +122,20 @@ struct GeneticAlgorithm {
                     ++count;
                     if (count > 10) {
                         div = DIV;
-                        std::cout << "skip " << i << std::endl;
                         --num;
                         break;
                     }
                     assert(unit_next.at(i).total_distance > 1000);
                     auto size = send(sockfd, (void*)((char*)&unit_next.at(i) + st), ed - st, 0);
-                    std::cout << size << " " << ed - st << std::endl;
                     recv(sockfd, &is, sizeof(bool), 0);  //受信したら次を送ってOK
                 }
             }
         }
+        std::cerr << "end send" << std::endl;
 
         //optimize後のデータを受信
+        std::cerr << "start receive" << std::endl;
         for (int i = start; i < start + num; ++i) {
-            std::cerr << i << std::endl;
             for (int div = 0; div < DIV; ++div) {
                 bool is = false;
                 int count = 0;
@@ -155,6 +157,7 @@ struct GeneticAlgorithm {
         for (int i = start + num; i < end; ++i) {
             unit_next.at(i) = best_chromosome;
         }
+        std::cerr << "end receive" << std::endl;
         close(sockfd);
     }
 
@@ -166,12 +169,12 @@ struct GeneticAlgorithm {
     void optimizeUnitNext()
     {
         //auto optimizePartly0 = [&]() { optimizePartlyByServer(0, 0, 6); };
-        auto optimizePartly1 = [&]() { optimizePartly(6, 12); };
-        auto optimizePartly2 = [&]() { optimizePartly(7, 12); };
-        auto optimizePartly3 = [&]() { optimizePartly(8, 12); };
-        auto optimizePartly4 = [&]() { optimizePartly(9, 12); };
-        auto optimizePartly5 = [&]() { optimizePartly(10, 12); };
-        auto optimizePartly6 = [&]() { optimizePartly(11, 12); };
+        auto optimizePartly1 = [&]() { optimizePartly(8, 14); };
+        auto optimizePartly2 = [&]() { optimizePartly(9, 14); };
+        auto optimizePartly3 = [&]() { optimizePartly(10, 14); };
+        auto optimizePartly4 = [&]() { optimizePartly(11, 14); };
+        auto optimizePartly5 = [&]() { optimizePartly(12, 14); };
+        auto optimizePartly6 = [&]() { optimizePartly(13, 14); };
 
         std::thread th1(optimizePartly1);
         std::thread th2(optimizePartly2);
@@ -180,7 +183,7 @@ struct GeneticAlgorithm {
         std::thread th5(optimizePartly5);
         std::thread th6(optimizePartly6);
 
-        optimizePartlyByServer(0, 5, 12);
+        optimizePartlyByServer(0, 7, 14);
         //optimizePartly(0, 7);
 
         th1.join();
@@ -208,6 +211,10 @@ struct GeneticAlgorithm {
                 continue;
             } else {
                 used.insert(distance);
+                used.insert(distance - 0.1);
+                used.insert(distance - 0.2);
+                used.insert(distance + 0.1);
+                used.insert(distance + 0.2);
             }
             if (bestNp1.size() < param.N_p1) {
                 bestNp1.push(chromo);
