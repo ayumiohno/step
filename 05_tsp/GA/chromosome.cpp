@@ -3,6 +3,7 @@
 #include "tsp.hpp"
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 #include <vector>
 
 Chromosome::Chromosome(int num_of_city, std::vector<int>& order)
@@ -49,7 +50,7 @@ int Chromosome::getLocusByFirstCodon(int target, int num_of_city)
 
 void Chromosome::mutation(int start, int end, int num_of_city)
 {
-    if(start == end){
+    if (start == end) {
         return;
     }
     std::swap(chromosome.at(start).codon2, chromosome.at(end).codon1);
@@ -152,7 +153,7 @@ bool Chromosome::twoOpt(int swap1, int swap2, std::vector<Point> points, int num
 
 bool Chromosome::one_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city)
 {
-    if(target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0){
+    if (target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0) {
         return false;
     }
 
@@ -181,7 +182,7 @@ bool Chromosome::one_move(int target, int insert_pos, std::vector<Point>& points
 
 bool Chromosome::two_move(int target, int insert_pos, std::vector<Point>& points, int num_of_city)
 {
-    if(target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0 || (target - 1 - insert_pos) % num_of_city == 0){
+    if (target == insert_pos || (target + 1 - insert_pos) % num_of_city == 0 || (target - 1 - insert_pos) % num_of_city == 0) {
         return false;
     }
 
@@ -200,7 +201,7 @@ bool Chromosome::two_move(int target, int insert_pos, std::vector<Point>& points
         chromosome.at((target - 1 + num_of_city) % num_of_city).codon1 = chromosome.at(insert_pos).codon1;
         chromosome.at(insert_pos).codon1 = chromosome.at(target).codon2;
 
-        if(target != 0){
+        if (target != 0) {
             chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(target));
             chromosome.insert(chromosome.begin() + insert_pos, chromosome.at(target - 1));
             int erase_pos = target < insert_pos ? target : target + 2;

@@ -3,12 +3,12 @@
 #include "tsp.hpp"
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 #include <queue>
+#include <random>
 #include <set>
 #include <thread>
 #include <vector>
-#include <iostream>
-#include <random>
 
 std::random_device rd;
 std::default_random_engine eng(rd());
@@ -56,14 +56,15 @@ void GeneticAlgorithm::optimizePartly(int part_index, int parts_num)
 {
     for (int i = unit_next.size() * part_index / parts_num; i < unit_next.size() * (part_index + 1) / parts_num; i++) {
         unit_next.at(i).calcTotalDistance(points);
-        unit_next.at(i).optimize(points, num_of_city);
+        //unit_next.at(i).optimize(points, num_of_city);
         unit_next.at(i).calcFitness(num_of_city);
     };
 }
 
 void GeneticAlgorithm::optimizeUnitNext()
 {
-    auto optimizePartly0 = [&]() { optimizePartly(0, 6); };
+    optimizePartly(0, 1);
+    /*auto optimizePartly0 = [&]() { optimizePartly(0, 6); };
     auto optimizePartly1 = [&]() { optimizePartly(1, 6); };
     auto optimizePartly2 = [&]() { optimizePartly(2, 6); };
     auto optimizePartly3 = [&]() { optimizePartly(3, 6); };
@@ -82,7 +83,7 @@ void GeneticAlgorithm::optimizeUnitNext()
     th2.join();
     th3.join();
     th4.join();
-    th5.join();
+    th5.join();*/
 }
 
 void GeneticAlgorithm::selection()
@@ -91,16 +92,16 @@ void GeneticAlgorithm::selection()
     unit_next.push_back(best_chromosome);
     auto comp = [](const auto& a, const auto& b) { return a.total_distance < b.total_distance; };
     std::priority_queue<Chromosome, std::vector<Chromosome>, decltype(comp)> bestNp1;
-    std::set<double> used;
+    //std::set<double> used;
     assert(unit_next.size() >= param.N_p1);
 
     for (auto& chromo : unit_next) {
         double distance = chromo.total_distance;
-        if (used.count(distance)) {
+        /*if (used.count(distance)) {
             continue;
         } else {
             used.insert(distance);
-        }
+        }*/
         if (bestNp1.size() < param.N_p1) {
             bestNp1.push(chromo);
         } else if (distance < bestNp1.top().total_distance) {
@@ -162,22 +163,26 @@ void GeneticAlgorithm::crossOverNextUnit()
     for (int i = mutation_num; 2 * i + 1 < unit_next.size(); ++i) {
         edgeExchange(2 * i, 2 * i + 1);
     }
-    
+
     for (int i = 0; i < mutation_num; ++i) {
-        for(int j = 0; j < 5; ++j) {
+        for (int j = 0; j < 5; ++j) {
             int rand1 = distr(eng) % num_of_city;
             int rand2 = distr(eng) % num_of_city;
-            unit_next.at(i).mutation(rand1, rand2, num_of_city); //random
+            unit_next.at(i).mutation(rand1, rand2, num_of_city);  //random
         }
     }
 }
 
 double GeneticAlgorithm::evolution()
 {
+    std::cerr << "init" << std::endl;
     init();
     for (int i = 0; i < param.cycle; ++i) {
+        std::cerr << "create next" << std::endl;
         createNextUnit();
+        std::cerr << "cross over" << std::endl;
         crossOverNextUnit();
+        std::cerr << "selection" << std::endl;
         selection();
         std::cout << best_chromosome.total_distance << std::endl;
     }
@@ -261,7 +266,7 @@ double GeneticAlgorithm::evolution()
             }
         }
 
-        count = 0;
+        /*count = 0;
         is_end = false;
         while (!is_end && count < 1) {
             is_end = true;
@@ -275,12 +280,12 @@ double GeneticAlgorithm::evolution()
                     }
                 }
             }
-        }
+        }*/
     }
     return best_distance;
 }
 
-        /*debug*****************************************************
+/*debug*****************************************************
             std::cout << locus1_s << " " << locus2_s << std::endl;
             std::cout << "parent1: ";
             for(auto& gene : unit_next.at(parent1).chromosome){
