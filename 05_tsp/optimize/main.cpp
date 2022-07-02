@@ -7,6 +7,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <time.h>
 #include <vector>
 
 int main()
@@ -41,7 +42,7 @@ int main()
     std::cout << "seed: " << seed << std::endl;
 
     std::default_random_engine eng(seed);
-    std::uniform_int_distribution<int> distr(1, num_of_dots - 1);
+    std::uniform_int_distribution<int> distr(0, num_of_dots - 1);
 
 
     double best_score = 1000000;
@@ -73,7 +74,7 @@ int main()
             }
         }
         std::cerr << is_end << std::endl;
-        for (int j = 0; j < 3; ++j) {
+        for (int j = 0; j < 10; ++j) {
             std::cerr << j << std::endl;
             count = 0;
             is_end = false;
@@ -136,9 +137,20 @@ int main()
 
             count = 0;
             is_end = false;
+            time_t start;
+            time(&start);
             while (!is_end && count < 1) {
                 is_end = true;
-                for (int a = 0; a < num_of_dots; ++a) {
+                int init_a = distr(eng);
+                int a = init_a;
+                while (a != init_a - 1) {
+                    time_t now;
+                    time(&now);
+                    if (now - start > 1200) {
+                        std::cerr << "time out at " << a << " from " << init_a << std::endl;
+                        is_end = true;
+                        break;
+                    }
                     for (int b = a + 1; b < num_of_dots; ++b) {
                         for (int c = b + 1; c < num_of_dots; ++c) {
                             ++count;
@@ -147,6 +159,7 @@ int main()
                             }
                         }
                     }
+                    a = (a + 1) % num_of_dots;
                 }
             }
         }
