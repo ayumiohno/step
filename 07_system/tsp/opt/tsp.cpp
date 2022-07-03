@@ -21,7 +21,7 @@ double getDistance(const std::vector<Point>& points, int i, int j, int num_of_do
 //             |    =>         -     |
 //   * -  -  - *         *  -     -  *
 // p2+1        p2       p2+1        p2
-bool reverseSubPath(const int& swap1, const int& swap2,
+bool twoOpt(const int& swap1, const int& swap2,
     std::vector<Point>& points,
     double& min_length, const int& num_of_dots)
 {
@@ -332,7 +332,7 @@ bool move4Points(const int& base,
     return false;
 }
 
-bool reverseSubPath3(const int& swap1, const int& swap2, const int& swap3,
+bool threeOpt(const int& swap1, const int& swap2, const int& swap3,
     std::vector<Point>& points,
     double& min_length, const int& num_of_dots)
 {

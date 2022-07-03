@@ -35,20 +35,21 @@ int main()
 
     int num_of_dots = points.size();
 
-    std::random_device rd;
-
-    auto seed = rd();
-
-    std::cout << "seed: " << seed << std::endl;
-
-    std::default_random_engine eng(seed);
-    std::uniform_int_distribution<int> distr(0, num_of_dots - 1);
-
 
     double best_score = 1000000;
     std::vector<Point> best_points;
 
     for (int cycle = 0; cycle < 10; ++cycle) {
+
+        std::random_device rd;
+
+        auto seed = rd();
+
+        std::cout << "seed: " << seed << std::endl;
+
+        std::default_random_engine eng(seed);
+        std::uniform_int_distribution<int> distr(0, num_of_dots - 1);
+
 
         std::cerr << cycle << std::endl;
         std::shuffle(points.begin(), points.end(), eng);
@@ -67,15 +68,17 @@ int main()
                 is_end = true;
                 for (int b = a + 1; b < num_of_dots; ++b) {
                     ++count;
-                    if (reverseSubPath(a, b, points, min_length, num_of_dots)) {
+                    if (twoOpt(a, b, points, min_length, num_of_dots)) {
                         is_end = false;
                     }
                 }
             }
         }
-        std::cerr << is_end << std::endl;
-        for (int j = 0; j < 10; ++j) {
-            std::cerr << j << std::endl;
+        for (int epoch = 0; epoch < 10; ++epoch) {
+            std::cerr << epoch << std::endl;
+
+            //one move
+            std::cerr << "one move" << std::endl;
             count = 0;
             is_end = false;
             while (!is_end && count < 10000) {
@@ -88,53 +91,67 @@ int main()
                 }
             }
 
+            //two move
+            std::cerr << "two move" << std::endl;
             count = 0;
             is_end = false;
             while (!is_end && count < 10000) {
                 is_end = true;
-                for (int base = 1; base < num_of_dots; ++base) {
+                for (int base = 0; base < num_of_dots; ++base) {
                     ++count;
                     if (move2Points(base, points, min_length, num_of_dots)) {
                         is_end = false;
                     }
                 }
             }
+
+            //three move
+            std::cerr << "three move" << std::endl;
             count = 0;
             is_end = false;
             while (!is_end && count < 10000) {
                 is_end = true;
-                for (int base = 1; base < num_of_dots; ++base) {
+                for (int base = 0; base < num_of_dots; ++base) {
                     ++count;
                     if (move3Points(base, points, min_length, num_of_dots)) {
                         is_end = false;
                     }
                 }
             }
+
+            //four move
+            std::cerr << "four move" << std::endl;
             count = 0;
             is_end = false;
             while (!is_end && count < 10000) {
                 is_end = true;
-                for (int base = 1; base < num_of_dots; ++base) {
+                for (int base = 0; base < num_of_dots; ++base) {
                     ++count;
                     if (move4Points(base, points, min_length, num_of_dots)) {
                         is_end = false;
                     }
                 }
             }
+
+            //two opt
+            std::cerr << "two_opt" << std::endl;
             count = 0;
             is_end = false;
             while (!is_end && count < 10000) {
                 is_end = true;
-                for (int a = 1; a < num_of_dots; ++a) {
+                for (int a = 0; a < num_of_dots; ++a) {
                     for (int b = a + 1; b < num_of_dots; ++b) {
                         ++count;
-                        if (reverseSubPath(a, b, points, min_length, num_of_dots)) {
+                        if (twoOpt(a, b, points, min_length, num_of_dots)) {
                             is_end = false;
                         }
                     }
                 }
             }
 
+            //three move
+            //randomな点でスタート
+            //20 minでtime outし次の処理に進む
             count = 0;
             is_end = false;
             time_t start;
@@ -154,7 +171,7 @@ int main()
                     for (int b = a + 1; b < num_of_dots; ++b) {
                         for (int c = b + 1; c < num_of_dots; ++c) {
                             ++count;
-                            if (reverseSubPath3(a, b, c, points, min_length, num_of_dots)) {
+                            if (threeOpt(a, b, c, points, min_length, num_of_dots)) {
                                 is_end = false;
                             }
                         }
@@ -164,13 +181,19 @@ int main()
             }
         }
         std::cerr << min_length << std::endl;
+
+        //今までのcycleで一番良い結果だった場合
         if (min_length < best_score) {
             best_score = min_length;
             best_points = points;
+
+            //局所最適化した後の点を出力
             std::cout << min_length << std::endl;
             for (auto point : best_points) {
                 std::cout << point.x << " " << point.y << std::endl;
             }
+
+            //シャッフルした後の点を出力
             std::cout << "init: " << std::endl;
             for (auto point : init_points) {
                 std::cout << point.x << " " << point.y << std::endl;
@@ -178,6 +201,7 @@ int main()
         }
     }
 
+    //10 cycleの中での最高結果を出力
     std::cerr << "best: " << best_score << std::endl;
     std::cout << best_points.size() << std::endl;
     for (auto point : best_points) {
