@@ -1,4 +1,4 @@
-確率的アルゴリズム
+局所最適化
 =
 
 # 目的
@@ -21,6 +21,7 @@
 * main.shを実行
 * file番号を一度入力
 # 結果
+## データ
 * best_score : 82727.6
 * seed : 1016666745
 * 途中のtimeout
@@ -46,4 +47,9 @@
 4091 from 3516
 167 from 7821
 ```
+## グラフ
+* opt後
+![](best_score.png)
+* opt前
+![](bestscore_init.png)
 
