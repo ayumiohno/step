@@ -24,7 +24,7 @@ int seed = rd();
 std::default_random_engine eng(seed);
 std::uniform_int_distribution<int> distr(1, 1000000000);
 
-constexpr int DIV = 16;
+constexpr int DIV = 16;  //tsp 通信時のchromosome classの分割数
 
 template <int NUM_OF_CITY>
 struct GeneticAlgorithm {
@@ -46,6 +46,7 @@ struct GeneticAlgorithm {
         this->num_of_city = points.size();
     }
 
+private:
     void init()
     {
         // Chromosomeをrandomに生成
@@ -61,6 +62,7 @@ struct GeneticAlgorithm {
             unit_now.push_back(std::move(chromosome));
         }
 
+        // 初期世代の染色体の総距離・fintnessを計算
         fitness_ave = 0;
         best_chromosome = unit_now.at(0);
         for (auto& chromosome : unit_now) {
@@ -190,6 +192,8 @@ struct GeneticAlgorithm {
         close(sockfd);
     }
 
+    //serverに送る
+    //optimizePartlyと形式をそろえた
     void optimizePartlyByServer(int part_index_s, int part_index_e, int parts_num)
     {
         client(unit_next.size() * part_index_s / parts_num, unit_next.size() * (part_index_e + 1) / parts_num, false);
@@ -200,6 +204,7 @@ struct GeneticAlgorithm {
         client(unit_now.size() * part_index_s / parts_num, unit_now.size() * (part_index_e + 1) / parts_num, true);
     }
 
+    //server内でのmultithread, clientとの分散処理をまとめ、unit_nextに所属するすべての染色体を最適化する関数
     void optimizeUnitNext()
     {
         //auto optimizePartly0 = [&]() { optimizePartlyByServer(0, 0, 6); };
@@ -228,6 +233,7 @@ struct GeneticAlgorithm {
         th6.join();
     }
 
+    //選択
     void selection()
     {
         optimizeUnitNext();
@@ -240,6 +246,7 @@ struct GeneticAlgorithm {
         assert(unit_next.size() >= param.N_p1);
 
         for (auto& chromo : unit_next) {
+            //同一の染色体が次の世代に複数入らないように
             double distance = chromo.total_distance;
             if (used.count(distance)) {
                 continue;
@@ -250,6 +257,7 @@ struct GeneticAlgorithm {
                 used.insert(distance + 0.1);
                 used.insert(distance + 0.2);
             }
+            //best Np1を選ぶ
             if (bestNp1.size() < param.N_p1) {
                 bestNp1.push(chromo);
             } else if (distance < bestNp1.top().total_distance) {
@@ -259,7 +267,10 @@ struct GeneticAlgorithm {
         }
         assert(bestNp1.size() == param.N_p1);
 
+        //unit_nowの置き換え・fitness_aveの計算
+
         unit_now.clear();
+
         fitness_ave = 0;
 
         while (!bestNp1.empty()) {
@@ -272,6 +283,11 @@ struct GeneticAlgorithm {
         fitness_ave = fitness_ave / param.N_p1;
     }
 
+    //交叉
+    //locus1_s : 染色体1の始点　locus2_s : 染色体2の始点 locus1_g : 染色体1の終点　locus2_g：染色体2の終点
+    //locus1_sのcodon1とlocus2_sのcodon1が一致
+    //locus1_gのcodon1とlocus2_sのcodon2が一致
+    //locus2_gのcodon1とlocus1_sのcodon2が一致
     void edgeExchange(int parent1, int parent2)
     {
         assert(parent1 < unit_next.size());
@@ -297,6 +313,7 @@ struct GeneticAlgorithm {
         }
     }
 
+    //fitnessに比例して総個体数をnp1 -> np2へ
     void createNextUnit()
     {
         unit_next.clear();
@@ -308,6 +325,7 @@ struct GeneticAlgorithm {
         }
     }
 
+    //交叉、突然変異
     void crossOverNextUnit()
     {
         // edgeeExchange and selection
@@ -327,7 +345,8 @@ struct GeneticAlgorithm {
         }
     }
 
-
+public:
+    // 全ての操作をまとめた関数
     double evolution()
     {
         init();
@@ -338,6 +357,8 @@ struct GeneticAlgorithm {
             std::cout << best_chromosome.total_distance << std::endl;
         }
 
+        //最後に残った世代に対して最適化
+
         auto optimizeFinaly0 = [&]() { min_distances.at(0) = optimizePartlyFinaly(0, 15); };
         auto optimizeFinaly1 = [&]() { min_distances.at(1) = optimizePartlyFinaly(1, 15); };
         auto optimizeFinaly2 = [&]() { min_distances.at(2) = optimizePartlyFinaly(2, 15); };
@@ -346,7 +367,7 @@ struct GeneticAlgorithm {
         auto optimizeFinaly5 = [&]() { min_distances.at(5) = optimizePartlyFinaly(5, 15); };
 
         optimizePartlyByServerFinaly(6, 14, 15);
-        client(-1, -1, false);
+        client(-1, -1, false);  //serverを閉じる
 
         std::thread th0(optimizeFinaly0);
         std::thread th1(optimizeFinaly1);
@@ -364,6 +385,7 @@ struct GeneticAlgorithm {
         th5.join();
 
 
+        //それぞれのスレッドの計算結果をまとめる
         auto min_distance = min_distances.at(0);
         for (auto d : min_distances) {
             min_distance = std::min(min_distance, d);
@@ -372,7 +394,7 @@ struct GeneticAlgorithm {
         return min_distance;
     }
 
-
+private:
     std::vector<Chromosome<NUM_OF_CITY>> unit_next;
     std::vector<Chromosome<NUM_OF_CITY>> unit_now;
     Chromosome<NUM_OF_CITY> best_chromosome;

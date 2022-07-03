@@ -23,6 +23,7 @@ public:
         }
     }
 
+    //総距離の計算
     void calcTotalDistance(const std::vector<Point>& points)
     {
         this->total_distance = 0;
@@ -31,12 +32,14 @@ public:
         }
     }
 
+    //適応度の計算
     void calcFitness(int num_of_city)
     {
         this->fitness = num_of_city * 100 / total_distance * num_of_city * 100 / total_distance * num_of_city * 100 / total_distance;
     }
 
 private:
+    //startとendの間で経路を反転
     void reversePath(int start, int end, int num_of_city)
     {
         int sum = start + (start < end ? end : end + num_of_city);
@@ -51,6 +54,8 @@ private:
     }
 
 public:
+    //gaの交叉用
+    //startから、target_codonと同じcodon1を持つ遺伝子まで反転させる
     int edgeReverse(int start, int target_codon, int num_of_city)
     {
         auto locus = (start + 1) % num_of_city;
@@ -61,6 +66,8 @@ public:
         return locus;
     }
 
+    //gaの交叉用(2つ目の染色体のloop初回)
+    //target_codonと同じcodon1を持つ遺伝子のindexを返す
     int getLocusByFirstCodon(int target, int num_of_city)
     {
         int locus = 0;
@@ -70,6 +77,7 @@ public:
         return locus;
     }
 
+    //突然変異
     void mutation(int start, int end, int num_of_city)
     {
         if (start == end) {
@@ -80,6 +88,8 @@ public:
     }
 
 private:
+    //局所最適化用
+
     bool twoOpt(int swap1, int swap2, std::vector<Point> points,
         int num_of_city)
     {
@@ -240,6 +250,8 @@ private:
     }
 
 public:
+    //selection前に行う最適化
+    //メンバ関数を用いる
     void optimize(std::vector<Point>& points, int num_of_city)
     {
         bool is_end = false;
@@ -297,6 +309,8 @@ public:
         }
     }
 
+    //残った世代に対して行う最適化
+    //tsp.cppの関数を用いる
     double optimizeFinaly(std::vector<Point>& points, int num_of_city)
     {
         std::vector<Point> best_points;
